@@ -1,0 +1,60 @@
+generated: '2026-08-17'
+method: searched
+source: https://kardinal.ai/route-optimization-api/
+plan_count: 2
+currency: EUR
+model: usage-based, pay per stop
+billing: prepaid packs, no subscription
+applies_to: Kardinal self-serve "Route Optimization API" (v1)
+status: announced-not-live
+status_note: >-
+  IMPORTANT — these prices are published on a LIVE page, but they price the self-serve
+  v1 API that is not yet callable. The sign-up target (console.kardinal.ai) and both
+  API hosts (api.kardinal.ai, sandbox-api.kardinal.ai) return NXDOMAIN, and the
+  page's own "View pricing" link to /pricing-route-optimization-api returns 404. The
+  shipped Kardinal ARO v2 API is sold enterprise-only through an Account Executive
+  with no published price. See lifecycle/kardinal-lifecycle.yml.
+plans:
+- name: Free tier
+  price: 0
+  currency: EUR
+  billing_period: monthly
+  included_quota: 1,000 stops per month
+  overage: null
+  card_required: false
+  limits:
+    constraints: 'Every constraint, on every plan, including the free tier'
+  includes:
+  - Full Python and JS/TS SDKs
+  - The complete sandbox
+  - Complete docs
+  - Forkable examples
+  quote: >-
+    "1,000 free stops a month, full sandbox, Python and JS/TS SDKs, complete docs.
+    The whole product, capped by volume, prove it works before you spend a cent."
+- name: Prepaid packs
+  price_from: 0.012
+  price_unit: per stop
+  currency: EUR
+  billing_period: prepaid, no expiry
+  included_quota: null
+  overage: null
+  volume_discount: true
+  limits:
+    expiry: 'Stops do not expire, no lock-in'
+  quote: >-
+    "from 0.012 EUR / stop — prepaid packs, price drops with volume."
+billing_notes:
+- Re-optimizations are free; billing counts only the stops actually optimized.
+- No subscription, no tiers, no sales call for the self-serve product.
+enterprise:
+  published_price: false
+  route: Account Executive / "Talk to sales"
+  note: >-
+    The shipped ARO v2 API is provisioned by invitation per customer environment and
+    carries no published price. The marketing site routes enterprise buyers to
+    https://kardinal.ai/contact/.
+evidence:
+- {url: 'https://kardinal.ai/route-optimization-api/', http_status: 200, fetched: '2026-08-17'}
+- {url: 'https://kardinal.ai/pricing-route-optimization-api', http_status: 404, fetched: '2026-08-17'}
+- {url: 'https://console.kardinal.ai', http_status: null, fetched: '2026-08-17', note: DNS NXDOMAIN}

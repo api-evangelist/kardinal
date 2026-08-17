@@ -1,0 +1,54 @@
+generated: '2026-08-17'
+method: probed
+source: live probe of every Kardinal host named in apis.yml and the ARO documentation
+hosts:
+- host: https://developers.kardinal.ai
+  role: documentation + API reference (Mintlify)
+  documents:
+  - {path: /.well-known/agent-card.json, status: 200, content_type: application/json, file: ../a2a/kardinal-agent-card.json, real_document: true}
+  - {path: /.well-known/agent.json, status: 404, real_document: false}
+  - {path: /.well-known/security.txt, status: 404, real_document: false}
+  - {path: /.well-known/openid-configuration, status: 404, real_document: false}
+  - {path: /.well-known/oauth-authorization-server, status: 404, real_document: false}
+  - {path: /.well-known/oauth-protected-resource, status: 404, real_document: false}
+  - {path: /.well-known/api-catalog, status: 404, real_document: false}
+  - {path: /.well-known/ai-plugin.json, status: 404, real_document: false}
+- host: https://app.kardinal.ai
+  role: ARO v2 API host (example customer environment)
+  soft_200: true
+  documents:
+  - {path: /.well-known/security.txt, status: 200, content_type: text/html, real_document: false, note: SPA catch-all HTML shell}
+  - {path: /.well-known/openid-configuration, status: 200, content_type: text/html, real_document: false, note: SPA catch-all HTML shell}
+  - {path: /.well-known/oauth-authorization-server, status: 200, content_type: text/html, real_document: false, note: SPA catch-all HTML shell}
+  - {path: /.well-known/oauth-protected-resource, status: 200, content_type: text/html, real_document: false, note: SPA catch-all HTML shell}
+  - {path: /.well-known/api-catalog, status: 200, content_type: text/html, real_document: false, note: SPA catch-all HTML shell}
+  - {path: /.well-known/ai-plugin.json, status: 200, content_type: text/html, real_document: false, note: SPA catch-all HTML shell}
+  - {path: /.well-known/agent-card.json, status: 200, content_type: text/html, real_document: false, note: SPA catch-all HTML shell}
+  - {path: /.well-known/agent.json, status: 200, content_type: text/html, real_document: false, note: SPA catch-all HTML shell}
+- host: https://kardinal.ai
+  role: marketing website (WordPress)
+  documents:
+  - {path: /.well-known/security.txt, status: 403, real_document: false}
+  - {path: /.well-known/openid-configuration, status: 403, real_document: false}
+  - {path: /.well-known/oauth-authorization-server, status: 403, real_document: false}
+  - {path: /.well-known/api-catalog, status: 403, real_document: false}
+  - {path: /.well-known/ai-plugin.json, status: 403, real_document: false}
+  - {path: /.well-known/agent-card.json, status: 403, real_document: false}
+summary:
+  real_documents_found: 1
+  real_documents:
+  - developers.kardinal.ai/.well-known/agent-card.json
+  security_txt: false
+  openid_configuration: false
+  oauth_authorization_server: false
+  api_catalog: false
+  ai_plugin: false
+pointer_decision: >-
+  NO `WellKnown` and NO `SecurityTxt` pointer is emitted. Every path in the
+  well-known DISCOVERY-CATALOG set (security.txt, openid-configuration,
+  oauth-authorization-server, api-catalog, ai-plugin.json) 404s on the docs host,
+  403s on the marketing host, and returns an HTML SPA shell on the API host — none
+  of which is a served document. The single real document found at a /.well-known
+  path is the A2A agent card, which is already carried by its own `AgentCard`
+  pointer at a2a/kardinal-a2a.yml; asserting `WellKnown` on the strength of it would
+  double-count one artifact as two surfaces.

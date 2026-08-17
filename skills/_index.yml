@@ -1,0 +1,42 @@
+generated: '2026-08-17'
+method: searched
+source: >-
+  One skill harvested verbatim from the provider's own published Agent Skill; three
+  more generated from the Kardinal ARO OpenAPI and the developer portal, every step
+  grounded in an operationId verified against
+  openapi/kardinal-aro-openapi-original.yml.
+api: openapi/kardinal-aro-openapi-original.yml
+skill_count: 4
+skills:
+- file: kardinal-route-optimization.md
+  name: Kardinal
+  method: searched
+  source: https://developers.kardinal.ai/.well-known/agent-skills/kardinal/skill.md
+  http_status: 200
+  fetched: '2026-08-17'
+  verbatim: true
+  discovered_via: the `skills[0].url` member of the A2A agent card at /.well-known/agent-card.json
+  description: >-
+    Provider-published skill, saved verbatim. Covers modeling a client's logistics
+    problem as a Kardinal plan — constraints, capacities, time windows, driver skills,
+    and reoptimization — with the provider's own guidance on when to reach for the API.
+  api: openapi/kardinal-aro-openapi-original.yml
+  operations: [putPlan, getPlanSolution, getPlan, putPlanResource, putPlanOrder]
+- file: kardinal-create-plan-and-get-solution.md
+  name: Create a Kardinal plan and retrieve its optimized solution
+  method: generated
+  description: The core PUT-a-plan / poll / GET-the-solution flow, including the infeasible-is-not-an-error trap.
+  api: openapi/kardinal-aro-openapi-original.yml
+  operations: [postLogin, putPlan, getPlanStatus, getPlanSolution, getPlanSolutionObjectives]
+- file: kardinal-authenticate-and-refresh.md
+  name: Authenticate against the Kardinal ARO API and keep the token alive
+  method: generated
+  description: Password, MFA/OTP and SSO login, proactive one-hour token refresh, and offline token verification against the published ES384 signing key.
+  api: openapi/kardinal-aro-openapi-original.yml
+  operations: [postLogin, postLoginOTP, postLoginRefresh, postLoginWithAzureSSO, postLoginWithGoogleSSO, getLoginMethods, requestNewLoginOTPCode, getPublicKey]
+- file: kardinal-realtime-reoptimization.md
+  name: Re-optimize a running Kardinal plan after a field disruption
+  method: generated
+  description: Absorbing mid-shift changes with the narrowest per-entity call rather than resubmitting the whole plan.
+  api: openapi/kardinal-aro-openapi-original.yml
+  operations: [getPlan, putPlanOrder, deletePlanOrder, putPlanResource, putPlanResourceState, putForbidResourceStop, putPlanRunning, putPlanMode, checkPlanManualMode, getPlanStatus, getPlanSolution]

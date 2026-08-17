@@ -1,0 +1,140 @@
+generated: '2026-08-17'
+method: searched
+source: https://developers.kardinal.ai/
+derived_from: openapi/kardinal-aro-openapi-original.yml
+api: Kardinal ARO API v2 (spec version 2.55.0)
+base_url:
+  pattern: https://<env>.kardinal.ai/api/v2
+  templated: true
+  note: >-
+    Every customer gets their own environment host, provisioned by an Account
+    Executive; sandbox and production are separate hosts with separate credentials
+    and separate data. https://app.kardinal.ai/api/v2 is the example named in the
+    docs and is the host recorded as baseURL.
+  verified:
+    url: https://app.kardinal.ai/api/v2/public_key
+    http_status: 200
+    fetched: '2026-08-17'
+authentication:
+  style: JWT bearer
+  header: 'Authorization: Bearer <access_token>'
+  token_lifetime: 1 hour
+  refresh: POST /login/refresh with the refresh_token
+  api_keys: false
+  detail: authentication/kardinal-authentication.yml
+idempotency:
+  supported: true
+  mechanism: natural-key upsert
+  idempotency_key_header: false
+  detail: >-
+    Kardinal does not implement an `Idempotency-Key` request header. Its idempotency
+    contract is structural instead: every mutating write on a plan, resource or order
+    is a PUT to a URL that contains a CLIENT-SUPPLIED id
+    (PUT /agencies/{agencyId}/plans/{planId},
+    PUT /agencies/{agencyId}/plans/{planId}/resources/{resourceId},
+    PUT /agencies/{agencyId}/plans/{planId}/orders/{orderId}), and the docs state
+    plainly that this "doubles as create and update". Replaying the same PUT with the
+    same body and the same id therefore converges on the same state rather than
+    creating duplicates — the retry-safety property an agent needs. The response code
+    distinguishes the two outcomes (201 on first write, 200 on update).
+  idempotent_operations:
+  - putPlan
+  - putPlanResource
+  - putPlanOrder
+  - putPlanRunning
+  - putPlanResourceState
+  - putForbidResourceStop
+  - putPlanMode
+  - putMFAConfigPreferredType
+  - regenerateMFABackupCodes
+  non_idempotent_operations:
+  - {operationId: postSimplePlan, note: 'POST /agencies/{agencyId}/simplePlans — server-assigned, replay creates a new simple plan.'}
+  caveats:
+  - >-
+    Re-PUTting a plan does not merely persist it: optimization restarts against the
+    new version, so a retry is state-safe but is NOT compute-free. The plan carries an
+    explicit `version` field for this reason.
+  - >-
+    There is no idempotency-key replay cache, so a retry after an ambiguous network
+    failure re-executes the write rather than returning a cached original response.
+pagination:
+  style: page-number
+  applies_to: [getPlans]
+  params:
+  - {name: page, in: query}
+  - {name: itemsPerPage, in: query}
+  - {name: limit, in: query}
+  default: >-
+    Collections are NOT paginated by default. Paging engages only when at least one
+    of `page` or `itemsPerPage` is present with a valid value; if `page` is present
+    and `itemsPerPage` is absent, documented defaults apply.
+  source: https://developers.kardinal.ai/api-reference/plan/retrieves-a-collection-of-plans
+filtering:
+  params:
+  - {name: archived, in: query, note: include/exclude archived plans}
+  - {name: force, in: query, note: override guard on selected mutations}
+  - {name: planMode, in: query}
+response_envelope:
+  single: '{"item": { ... }}'
+  errors: '{"errors": [{"code": "...", "message": "...", "properties": {}}]}'
+  note: Single-resource reads wrap the payload in an `item` field.
+  detail: errors/kardinal-error-codes.yml
+error_handling:
+  format: proprietary envelope (EnvelopedErrors), NOT RFC 9457
+  branch_on: the `code` field, never the HTTP status alone
+  detail: errors/kardinal-error-codes.yml
+async_model:
+  style: submit-then-poll
+  detail: >-
+    Optimization starts automatically the moment a plan is accepted — there is no
+    separate "start" call. Progress is read by polling the plan `status` field
+    through GET /agencies/{agencyId}/plans/{planId}/status, which reports the stage
+    (waitingRoom, creation, optimization, waitingTraffic).
+  poll_operations: [getPlanStatus, fetchLastPlanState, fetchLastNPlanStates]
+  result_operations: [getPlanSolution, getPlanSolutionObjectives]
+  control_operations: [putPlanRunning]
+  compute_budget:
+    field: maxOptimizationDuration
+    scope: plan-level
+    format: ISO 8601 duration (e.g. PT1M)
+    note: >-
+      There is no platform-wide ceiling on optimization time; the integrator sets it
+      per plan, and the engine stops early once it stops finding improvements.
+webhooks:
+  supported: false
+  evidence: >-
+    The OpenAPI has no `webhooks` block and no `callbacks`, and the PlanStatus field
+    description instructs integrators to "Poll this field to know when a new solution
+    is ready instead of relying on a push/webhook mechanism." The
+    sandbox-to-production checklist contains a generic "point any webhooks at the
+    production environment" line, but no webhook catalog, event list or subscription
+    endpoint is published anywhere on the developer portal.
+versioning:
+  scheme: uri-path
+  current: v2
+  spec_version: 2.55.0
+  policy_published: false
+  note: >-
+    The version lives in the path (/api/v2). The dedicated versioning/deprecation
+    guide at /guides/migrating-api-versions is an unwritten placeholder ("To be
+    written"), so no versioning policy, deprecation timeline or migration checklist
+    is currently published.
+rate_limit_signaling:
+  headers_published: false
+  detail: rate-limits/kardinal-rate-limits.yml
+data_formats:
+  request: [application/json, multipart/form-data, XLSX]
+  note: >-
+    A plan can be submitted inline as JSON, as a file upload (-F "file=@plan.json"),
+    or as an XLSX spreadsheet whose column names match the JSON field names.
+  durations: ISO 8601 (PT5M30S)
+  timestamps: ISO 8601 UTC
+  coordinates: '{lon, lat} decimal degrees — the API does not geocode addresses'
+request_tracing:
+  request_id_header: none published
+cross_links:
+  authentication: authentication/kardinal-authentication.yml
+  errors: errors/kardinal-error-codes.yml
+  lifecycle: lifecycle/kardinal-lifecycle.yml
+  rate_limits: rate-limits/kardinal-rate-limits.yml
+  data_model: data-model/kardinal-data-model.yml

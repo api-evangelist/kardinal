@@ -1,0 +1,24 @@
+generated: '2026-08-17'
+method: searched
+source: https://developers.kardinal.ai/reference/changelog
+scheme: uri-path (v2)
+current_version: 2.55.0
+current_version_source: openapi/kardinal-aro-openapi-original.yml info.version
+entry_count: 0
+entries: []
+note: >-
+  The changelog page exists and is linked from llms.txt, but it has never been
+  populated. Its entire body is the authoring stub — a note reading "Reference —
+  priority P2. Update this page with every notable API change." followed by a single
+  "Upcoming / To be defined — Describe the changes for the next version here."
+  placeholder. No dated release entry has been published, so no `ChangeLog` pointer is
+  wired into apis.yml: the page documents an intention, not a change history.
+  The only version signal Kardinal actually publishes is the `info.version` field of
+  the OpenAPI (2.55.0), which implies an active release cadence that the changelog
+  does not record.
+related_gap: >-
+  https://developers.kardinal.ai/guides/migrating-api-versions is likewise an
+  unwritten placeholder, so there is no published record of what changed between
+  versions and no deprecation timeline. See lifecycle/kardinal-lifecycle.yml.
+evidence:
+- {url: 'https://developers.kardinal.ai/reference/changelog', http_status: 200, fetched: '2026-08-17', bytes: 458}

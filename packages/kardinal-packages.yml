@@ -1,0 +1,75 @@
+generated: '2026-08-17'
+method: searched
+source: registry search across npm, PyPI, RubyGems, crates.io and the KardinalAI GitHub organization
+package_count: 0
+official_sdk_count: 0
+packages: []
+note: >-
+  No first-party Kardinal client library was found in any public registry. The
+  developer portal ships curl examples only and links no SDK, and no `SDKs` pointer is
+  wired into apis.yml. The self-serve v1 landing page advertises "Full Python & JS/TS
+  SDKs" as part of its free tier, but that product is not yet live (see
+  lifecycle/kardinal-lifecycle.yml) and neither SDK is published to PyPI or npm at
+  the time of this pass.
+registry_probes:
+- {registry: npm, query: kardinal, result: 'no first-party package', note: '@kardinal/whiterabbit and @kardinal/test exist under the scope but belong to an unrelated publisher (github.com/Hakan-unal), are unrelated to route optimization, and were last published 2023'}
+- {registry: pypi, package: kardinal, url: 'https://pypi.org/pypi/kardinal/json', http_status: 404}
+- {registry: rubygems, package: kardinal, url: 'https://rubygems.org/api/v1/gems/kardinal.json', http_status: 404}
+- {registry: crates.io, package: kardinal, url: 'https://crates.io/api/v1/crates/kardinal', http_status: 403, note: probe blocked by the registry, not a confirmed absence}
+github_org:
+  url: https://github.com/KardinalAI
+  name: Kardinal
+  location: Paris
+  created: '2020-05-07'
+  public_repos: 4
+  note: >-
+    The GitHub organization is real and active but publishes optimization
+    infrastructure and internal tooling, NOT API client libraries. None of the four
+    repositories wraps the Kardinal ARO API.
+  repositories:
+  - name: KardinalAI/cp_sat
+    language: Rust
+    description: Google CP-SAT solver Rust bindings
+    stars: 34
+    pushed: '2026-07-08'
+    official: true
+    api_client: false
+    version: null
+    published: null
+    registry: crates.io
+    registry_note: >-
+      Published as a Rust crate but the crates.io API returned 403 to this probe, so
+      no version/date could be read. Latest source push is recorded instead.
+  - name: KardinalAI/coin_cbc
+    language: Rust
+    description: Rust bindings to the CoinOR CBC MILP solver using the C API
+    stars: 19
+    pushed: '2026-08-06'
+    official: true
+    api_client: false
+    version: null
+    published: null
+    registry: crates.io
+    registry_note: crates.io API returned 403 to this probe; version unread.
+  - name: KardinalAI/gorabbit
+    language: Go
+    description: High-level wrapper for the official Go RabbitMQ plugin, with an automatic "Always-On" reconnection mechanism
+    stars: 79
+    pushed: '2025-10-09'
+    official: true
+    api_client: false
+    version: null
+    published: null
+    registry: go-modules
+    registry_note: Go module resolved from the repository itself; no separate registry release date recorded.
+  - name: KardinalAI/iso8601-duration
+    description: Parse ISO 8601 duration format
+    stars: 0
+    pushed: '2021-10-15'
+    fork: true
+    official: false
+    api_client: false
+    version: null
+    published: null
+    registry: null
+    registry_note: A fork, not a Kardinal release.

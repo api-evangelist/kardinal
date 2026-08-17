@@ -1,0 +1,95 @@
+generated: '2026-08-17'
+method: derived
+source: openapi/kardinal-aro-openapi-original.yml
+searched: https://developers.kardinal.ai/
+standards:
+- id: openapi-3.0
+  conforms: true
+  evidence: 'openapi: 3.0.3 published at https://developers.kardinal.ai/openapi.yaml — 40 operations, 195 component schemas, all operations carry operationId, summary and tags'
+- id: rest
+  conforms: true
+  evidence: resource-oriented URI hierarchy (/agencies/{agencyId}/plans/{planId}/resources/{resourceId}) with method semantics GET/PUT/DELETE/POST
+- id: jwt-rfc7519
+  conforms: true
+  evidence: all five securitySchemes are type http, scheme bearer, bearerFormat JWT
+- id: jwk-rfc7517
+  conforms: true
+  evidence: 'GET /public_key serves the signing key as a JWK (probed live: ES384, EC P-384) with a PEM alternative'
+- id: bearer-token-rfc6750
+  conforms: true
+  evidence: 'Authorization: Bearer <access_token> on every authenticated operation'
+- id: iso8601-durations
+  conforms: true
+  evidence: durations expressed as ISO 8601 (maxOptimizationDuration PT1M, operationDuration PT5M30S)
+- id: iso8601-timestamps
+  conforms: true
+  evidence: time windows and waypoint arrival times expressed as ISO 8601 UTC instants
+- id: idempotency
+  conforms: true
+  partial: true
+  evidence: 'PUT-as-upsert on client-supplied ids across putPlan/putPlanResource/putPlanOrder; no Idempotency-Key header — see conventions/kardinal-conventions.yml'
+- id: pagination
+  conforms: true
+  partial: true
+  evidence: 'page/itemsPerPage/limit query parameters on getPlans, but paging is opt-in and only one collection endpoint exists'
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: 'errors use a proprietary EnvelopedErrors envelope ({"errors":[{"code","message","properties"}]}) with content-type application/json, not application/problem+json'
+- id: oauth2
+  conforms: false
+  evidence: no oauth2 securityScheme declared; authentication is direct password-for-JWT exchange
+- id: oidc
+  conforms: false
+  partial: true
+  evidence: 'no openIdConnect securityScheme and no /.well-known/openid-configuration; Azure and Google SSO login endpoints exist (postLoginWithAzureSSO, postLoginWithGoogleSSO) but the OIDC handshake is not exposed as a discoverable scheme'
+- id: rfc8414-oauth-authorization-server-metadata
+  conforms: false
+  evidence: /.well-known/oauth-authorization-server returns 404 on the docs host and an HTML SPA shell on the API host
+- id: rfc9116-security-txt
+  conforms: false
+  evidence: /.well-known/security.txt returns 404 on developers.kardinal.ai and 403 on kardinal.ai
+- id: rfc8594-sunset-header
+  conforms: false
+  evidence: no Sunset or Deprecation header support documented; no deprecated operations in the spec
+- id: asyncapi
+  conforms: false
+  applicable: false
+  evidence: 'no event surface — the spec has no webhooks or callbacks block and PlanStatus explicitly directs integrators to poll "instead of relying on a push/webhook mechanism"'
+- id: mcp
+  conforms: true
+  evidence: 'remote MCP server answering tools/list unauthenticated at https://developers.kardinal.ai/mcp (documentation-scope tools) — see mcp/kardinal-mcp.yml'
+- id: a2a-agent-card
+  conforms: true
+  partial: true
+  grade: flavored
+  evidence: '/.well-known/agent-card.json served at developers.kardinal.ai; passes all three hard checks but uses supportedInterfaces rather than additionalInterfaces — see a2a/kardinal-a2a.yml'
+- id: llms-txt
+  conforms: true
+  evidence: https://developers.kardinal.ai/llms.txt served as text/plain with the full page index and an OpenAPI Specs section
+- id: agent-skills
+  conforms: true
+  evidence: provider-published skill at /.well-known/agent-skills/kardinal/skill.md with name/description frontmatter — captured in skills/kardinal-route-optimization.md
+compliance_program:
+  published: false
+  certifications: []
+  note: >-
+    No compliance program, certification list, or trust-center content could be
+    verified. trust.kardinal.ai resolves via CNAME to trust.cname.drata.com — a Drata
+    Trust Center — which strongly suggests one exists, but the host returned HTTP 403
+    to every probe (curl and browser-style fetch alike), so no certification could be
+    read and NONE is asserted. The developer portal's own
+    /concepts/data-security page, which is meant to cover data location, GDPR
+    compliance, retention and encryption, is an unwritten "To be written" placeholder.
+    No `Compliance` or `TrustCenter` pointer is emitted.
+  evidence:
+  - {url: 'https://trust.kardinal.ai/', http_status: 403, fetched: '2026-08-17', dns: 'CNAME trust.cname.drata.com'}
+  - {url: 'https://developers.kardinal.ai/concepts/data-security', http_status: 200, fetched: '2026-08-17', note: body is a "To be written" placeholder}
+jurisdiction:
+  company: KARDINAL, société par actions simplifiée
+  country: France
+  city: Paris
+  source: https://kardinal.ai/legal-notice/
+  note: >-
+    An EU-established processor handling delivery and end-customer location data, so
+    GDPR applies by establishment; the provider has not yet published its GDPR posture
+    on the developer portal.

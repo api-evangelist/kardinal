@@ -1,0 +1,80 @@
+generated: '2026-08-17'
+method: searched
+source: https://developers.kardinal.ai/
+versioning:
+  scheme: uri-path
+  current: v2
+  spec_version: 2.55.0
+  docs: https://developers.kardinal.ai/guides/migrating-api-versions
+  policy_published: false
+  note: >-
+    The migration guide exists as a page but its body is the unwritten placeholder
+    "To be written — API versioning policy / Differences between the current and
+    previous version / Migration checklist / Deprecation timeline".
+deprecation:
+  policy_url: null
+  policy_published: false
+  sunset_header: false
+  deprecation_header: false
+  note: >-
+    No deprecation policy, no sunset timeline, and no RFC 8594 Sunset/Deprecation
+    header support is documented. No `deprecated: true` operation appears anywhere in
+    the OpenAPI.
+deprecated_operations: []
+sla:
+  published: false
+  url: https://developers.kardinal.ai/reference/limits-and-quotas
+  note: >-
+    The limits-and-quotas reference lists SLA as "Not yet published — contact
+    support@kardinal.ai to confirm for your account" for both sandbox and production.
+status_page: null
+status_page_note: >-
+  No status page found. status.kardinal.ai does not resolve (NXDOMAIN) and no
+  status/uptime page is linked from the website or the developer portal.
+changelog:
+  url: https://developers.kardinal.ai/reference/changelog
+  dated_entries: 0
+  note: >-
+    The changelog page exists but contains only a template stub ("Reference —
+    priority P2. Update this page with every notable API change.") and a single
+    "Upcoming / To be defined" placeholder. No dated release has been published.
+  detail: changelog/kardinal-changelog.yml
+surfaces:
+- name: Kardinal ARO API v2
+  state: live
+  evidence:
+  - {url: 'https://app.kardinal.ai/api/v2/public_key', http_status: 200, note: returns a real ES384 JWK}
+  - {url: 'https://developers.kardinal.ai/openapi.yaml', http_status: 200, note: OpenAPI 3.0.3, 40 operations, 195 schemas}
+  access: invitation only, per-customer environment, no self-serve sign-up
+- name: Kardinal self-serve "Route Optimization API" v1
+  state: announced-not-live
+  announced_at: https://kardinal.ai/route-optimization-api/
+  claims:
+  - POST /v1/optimize
+  - 1,000 free stops per month, no credit card
+  - from EUR 0.012 per stop on prepaid packs
+  - Python and JS/TS SDKs
+  - MCP server and agentic docs
+  evidence_it_is_not_live:
+  - {check: DNS, host: api.kardinal.ai, result: NXDOMAIN, note: the host its OpenAPI names as the production server}
+  - {check: DNS, host: sandbox-api.kardinal.ai, result: NXDOMAIN, note: the host its OpenAPI names as the sandbox server}
+  - {check: DNS, host: console.kardinal.ai, result: NXDOMAIN, note: the sign-up target linked from the landing page}
+  - {url: 'https://kardinal.ai/pricing-route-optimization-api', http_status: 404, note: the "View pricing" link on the landing page}
+  - {url: 'https://developers.kardinal.ai/openapi.json', http_status: 200, note: 'the v1 spec is a self-declared stub — info.description reads "Spécification à compléter avec les endpoints réels" (specification to be completed with the real endpoints), and it declares a single placeholder operation with untyped object schemas'}
+  - {check: page-content, url: 'https://kardinal.ai/route-optimization-api/', note: 'the live landing page still carries unfilled template markers — "[MAX_STOPS]", "[N]+ constraints", and an HTML comment reading "A completer : LOGO_DARK_URL et les liens Services"'}
+  disposition: >-
+    NOT captured as an API in apis.yml and NOT saved to openapi/. The v1 spec is a
+    scaffold the provider labels as incomplete, and none of the hosts it names
+    resolve. Only the shipped ARO v2 API is profiled. Re-check on the next pass — if
+    api.kardinal.ai comes up and the spec is filled in, this becomes a second API
+    entry.
+documentation_maturity:
+  note: >-
+    The developer portal is actively under construction. Five reference/guide pages
+    resolve to explicit "To be written" placeholders (concepts/data-security,
+    concepts/sync-async-architecture, guides/migrating-api-versions,
+    reference/changelog, and the `properties` section of reference/error-codes), and
+    the OpenAPI itself carries "[TO_VALIDATE] Description pending review by a
+    Kardinal engineer" on a number of schema descriptions. The pages that ARE written
+    (error codes, limits and quotas, authentication, first API call, data model,
+    agent modeling checklist) are unusually candid about what is not yet published.

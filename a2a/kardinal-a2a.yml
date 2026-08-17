@@ -1,0 +1,50 @@
+generated: '2026-08-17'
+method: probed
+source: https://developers.kardinal.ai/.well-known/agent-card.json
+discovery:
+  path: /.well-known/agent-card.json
+  canonical: true
+  host: developers.kardinal.ai
+conformance:
+  spec: A2A 1.0.0
+  grade: flavored
+  protocol_version: '0.3'
+  preferred_transport: HTTP+JSON
+  deviations:
+  - supportedInterfaces-instead-of-additionalInterfaces
+  hard_checks:
+    capabilities_is_object: true
+    protocol_version_present: true
+    skills_is_array: true
+  note: >-
+    All three hard checks pass (capabilities is an object, protocolVersion is present,
+    skills is an array), but the card declares its transport list under
+    `supportedInterfaces` rather than the A2A 1.0.0 `additionalInterfaces` member,
+    which is an explicit flavored-grade deviation.
+card:
+  name: Kardinal API
+  description: Documentation for Kardinal's self-service logistics optimization API.
+  url: https://developers.kardinal.ai/
+  version: 1.0.0
+  skills: 1
+  file: kardinal-agent-card.json
+x-evidence:
+  fetched: '2026-08-17'
+  url: https://developers.kardinal.ai/.well-known/agent-card.json
+  http_status: 200
+  content_type: application/json
+x-notes:
+- >-
+  The card is served from the Mintlify-hosted documentation site
+  (developers.kardinal.ai) and its `url`, `provider.url` and `documentationUrl` all
+  point at that documentation host rather than at an A2A task endpoint. It advertises
+  a documentation-navigation posture, not a callable A2A agent for the ARO
+  optimization API itself.
+- >-
+  The card's single skill resolves to a real provider-published Agent Skill at
+  https://developers.kardinal.ai/.well-known/agent-skills/kardinal/skill.md (HTTP
+  200), captured verbatim in skills/kardinal-route-optimization.md.
+- >-
+  The legacy path https://developers.kardinal.ai/.well-known/agent.json returned 404.
+  On app.kardinal.ai every /.well-known/* path returns HTTP 200 with an HTML SPA
+  shell, so that host was rejected as a false positive rather than recorded as a hit.

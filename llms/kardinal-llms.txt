@@ -1,0 +1,70 @@
+# Kardinal API
+
+> Documentation for Kardinal's self-service logistics optimization API.
+
+## Docs
+
+- [Start here if you're an AI agent](https://developers.kardinal.ai/getting-started/agent-modeling-checklist.md): Mandatory checklist for any AI agent modeling a client's logistics problem as a Kardinal plan — read this before writing any integration code.
+- [First API call](https://developers.kardinal.ai/getting-started/first-api-call.md): Get a sandbox key and calculate your first route in under 15 minutes.
+- [Complete route walkthrough](https://developers.kardinal.ai/getting-started/complete-tour-walkthrough.md): Model a representative case: multiple vehicles, depots, and time windows, through to a usable result.
+- [Authentication and API keys](https://developers.kardinal.ai/guides/authentication.md): Key generation, rotation, and storage best practices.
+- [Moving from sandbox to production](https://developers.kardinal.ai/guides/sandbox-to-production.md): Environment differences and a production launch checklist.
+- [Handling large volumes](https://developers.kardinal.ai/guides/handling-large-volumes.md): Batch import, pagination, and async mode for long-running calculations.
+- [Migrating between API versions](https://developers.kardinal.ai/guides/migrating-api-versions.md): Version differences, deprecations, and a migration checklist.
+- [Modeling advanced constraints](https://developers.kardinal.ai/guides/advanced-constraints.md): Heterogeneous capacities, driver skills, mandatory breaks, multiple time windows.
+- [Multi-trip tours (depot returns)](https://developers.kardinal.ai/guides/multi-trip-tours.md): Model a vehicle that reloads at the depot and runs several rounds within one shift.
+- [Handling infeasibility](https://developers.kardinal.ai/guides/handling-infeasibility.md): Interpret a no-solution response and diagnose the constraint at fault.
+- [Real-time re-optimization](https://developers.kardinal.ai/guides/real-time-reoptimization.md): Trigger a recalculation following a disruption (delay, cancellation, urgent order).
+- [How the optimization engine works](https://developers.kardinal.ai/concepts/how-the-optimization-engine-works.md): What is minimized/maximized, and the trade-off between solution quality and computation time.
+- [Hard vs soft constraints](https://developers.kardinal.ai/concepts/hard-vs-soft-constraints.md): Feasibility logic and why a problem can be declared infeasible.
+- [Sync/async architecture](https://developers.kardinal.ai/concepts/sync-async-architecture.md): What determines response time depending on problem size.
+- [Data security and handling](https://developers.kardinal.ai/concepts/data-security.md): Hosting and compliance for delivery and end-customer data.
+- [Get the public key which can be used to check the tokens](https://developers.kardinal.ai/api-reference/authenticate/get-the-public-key-which-can-be-used-to-check-the-tokens.md)
+- [Request a password token](https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token.md)
+- [Check if a password token is valid](https://developers.kardinal.ai/api-reference/authenticate/check-if-a-password-token-is-valid.md)
+- [Reset a password for a user](https://developers.kardinal.ai/api-reference/authenticate/reset-a-password-for-a-user.md)
+- [Fetch the actor's MFA config](https://developers.kardinal.ai/api-reference/authenticate/fetch-the-actors-mfa-config.md)
+- [Disable an OTP type in the actor's MFA config](https://developers.kardinal.ai/api-reference/authenticate/disable-an-otp-type-in-the-actors-mfa-config.md)
+- [Request the update of the actor's MFA config](https://developers.kardinal.ai/api-reference/authenticate/request-the-update-of-the-actors-mfa-config.md)
+- [Request a new OTP code for the MFA config update validation](https://developers.kardinal.ai/api-reference/authenticate/request-a-new-otp-code-for-the-mfa-config-update-validation.md)
+- [Validate the update of the actor's MFA config](https://developers.kardinal.ai/api-reference/authenticate/validate-the-update-of-the-actors-mfa-config.md)
+- [Sets the actor's preferred OTP type in his MFA config](https://developers.kardinal.ai/api-reference/authenticate/sets-the-actors-preferred-otp-type-in-his-mfa-config.md)
+- [Regenerate the actor's backup codes](https://developers.kardinal.ai/api-reference/authenticate/regenerate-the-actors-backup-codes.md)
+- [Retrieve the available login methods for a given username](https://developers.kardinal.ai/api-reference/authenticate/retrieve-the-available-login-methods-for-a-given-username.md)
+- [Request a new OTP code for login](https://developers.kardinal.ai/api-reference/authenticate/request-a-new-otp-code-for-login.md)
+- [Login with Azure SSO](https://developers.kardinal.ai/api-reference/authenticate/login-with-azure-sso.md)
+- [Login with Google SSO](https://developers.kardinal.ai/api-reference/authenticate/login-with-google-sso.md)
+- [Login (returns an OTP token if MFA is configured for the user)](https://developers.kardinal.ai/api-reference/core/login-returns-an-otp-token-if-mfa-is-configured-for-the-user.md)
+- [Confirm login with OTP](https://developers.kardinal.ai/api-reference/core/confirm-login-with-otp.md)
+- [Create or update a plan](https://developers.kardinal.ai/api-reference/core/create-or-update-a-plan.md)
+- [Retrieve a plan solution](https://developers.kardinal.ai/api-reference/core/retrieve-a-plan-solution.md)
+- [Refresh the access token](https://developers.kardinal.ai/api-reference/management/refresh-the-access-token.md)
+- [Stop or restart the optimization of a plan](https://developers.kardinal.ai/api-reference/management/stop-or-restart-the-optimization-of-a-plan.md)
+- [Fetch the latest state of a plan](https://developers.kardinal.ai/api-reference/management/fetch-the-latest-state-of-a-plan.md)
+- [Fetch the latest states of a plan](https://developers.kardinal.ai/api-reference/management/fetch-the-latest-states-of-a-plan.md)
+- [Retrieve a plan status](https://developers.kardinal.ai/api-reference/management/retrieve-a-plan-status.md)
+- [Retrieves a collection of plans](https://developers.kardinal.ai/api-reference/plan/retrieves-a-collection-of-plans.md): At the moment, retrieving a collection of plans is not paginated by default. The paging is performed when at least one of the paging query parameters (`page` or `itemsPerPage`) is present with a valid value. The default values are used like this: - if `page` is present and `itemsPerPage` is absent,…
+- [Retrieve a plan](https://developers.kardinal.ai/api-reference/plan/retrieve-a-plan.md)
+- [Delete a plan](https://developers.kardinal.ai/api-reference/plan/delete-a-plan.md)
+- [Retrieve the objectives of a plan solution](https://developers.kardinal.ai/api-reference/plan/retrieve-the-objectives-of-a-plan-solution.md)
+- [Changes a plan's mode](https://developers.kardinal.ai/api-reference/plan/changes-a-plans-mode.md): By default, a plan is in "standard" mode: the solution is entirely built by the OR algorithms, following the various plan constraints. It is possible to switch the plan in "manual" mode: in this mode, the user can force some assignments which may violate some constraints.
+- [Check if a plan is in manual mode](https://developers.kardinal.ai/api-reference/plan/check-if-a-plan-is-in-manual-mode.md)
+- [Retrieve a plan's resource](https://developers.kardinal.ai/api-reference/resource/retrieve-a-plans-resource.md)
+- [Create or update a plan's resource](https://developers.kardinal.ai/api-reference/resource/create-or-update-a-plans-resource.md)
+- [Delete a plan's resource](https://developers.kardinal.ai/api-reference/resource/delete-a-plans-resource.md)
+- [Retrieve a plan's resource state](https://developers.kardinal.ai/api-reference/resource/retrieve-a-plans-resource-state.md)
+- [Update a plan's resource state](https://developers.kardinal.ai/api-reference/resource/update-a-plans-resource-state.md)
+- [Forbid a resource from doing a stop, and return the updated plan](https://developers.kardinal.ai/api-reference/resource/forbid-a-resource-from-doing-a-stop-and-return-the-updated-plan.md): Forbidding a resource from doing a stop is performed internally by adding a forbidden assignment in the list of additional constraints of the plan. The forbidden assignment relies on: - a generated resource tag, based on the id of the resource (example: `generatedTag:$resource-2$:forbid`), - a gener…
+- [Retrieve a plan's order](https://developers.kardinal.ai/api-reference/order/retrieve-a-plans-order.md)
+- [Create or update a plan's order](https://developers.kardinal.ai/api-reference/order/create-or-update-a-plans-order.md)
+- [Delete a plan's order](https://developers.kardinal.ai/api-reference/order/delete-a-plans-order.md)
+- [Create a simple plan](https://developers.kardinal.ai/api-reference/simpleplan/create-a-simple-plan.md)
+- [Data model](https://developers.kardinal.ai/reference/data-model.md): Dictionary of the Vehicle, Order/Task, Depot, Constraint, and Time window objects.
+- [Glossary](https://developers.kardinal.ai/reference/glossary.md): Unified terminology used throughout the Kardinal documentation.
+- [Error codes](https://developers.kardinal.ai/reference/error-codes.md): Table of business errors and their meaning, beyond generic HTTP codes.
+- [Limits and quotas](https://developers.kardinal.ai/reference/limits-and-quotas.md): Rate limits, maximum payload size, computation time, and SLA.
+- [Changelog](https://developers.kardinal.ai/reference/changelog.md): API version history.
+
+## OpenAPI Specs
+
+- [openapi](https://developers.kardinal.ai/openapi.yaml)

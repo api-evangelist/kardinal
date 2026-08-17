@@ -1,0 +1,70 @@
+generated: '2026-08-17'
+method: searched
+source: https://developers.kardinal.ai/reference/error-codes
+format: proprietary-envelope
+rfc9457: false
+envelope:
+  schema: EnvelopedErrors
+  shape: '{"errors": [{"code": "...", "message": "...", "properties": {}}]}'
+  array: true
+  array_note: >-
+    A single response — typically a 400 on plan or resource creation — can report
+    several invalid fields at once.
+  fields:
+  - {name: code, type: string, stable: true, guidance: Branch error handling on this field, not on the HTTP status alone.}
+  - {name: message, type: string, stable: false, guidance: Human-readable default. Useful for logs; not meant to be parsed.}
+  - {name: properties, type: object, stable: false, guidance: Optional extra context. Keys are NOT documented per code and the provider flags them as not stable.}
+  content_type: application/json
+error_code_count: 11
+error_codes:
+- {code: INVALID_INPUT, status: 400, message: The payload cannot be parsed., meaning: Request body is not valid JSON, or does not match the expected schema (wrong type, missing required field).}
+- {code: ID_NOT_UNIQUE, status: 400, message: The payload contains a collection with an id repeated multiple times., meaning: A collection in the payload (e.g. resources, orders) has the same id on more than one item.}
+- {code: KEYS_NOT_UNIQUE, status: 400, message: The payload contains a collection with the keys repeated multiple times., meaning: A collection has a repeated business key other than id.}
+- {code: INVALID_ID_REFERENCE, status: 400, message: The id reference contains an id that does not exist., meaning: A field references an id that does not match anything else in the payload or system (e.g. a resourceId that does not exist).}
+- {code: INVALID_VALUE, status: 400, message: The field value is not valid., meaning: A field value fails a validation rule — format, range, or allowed values.}
+- {code: PRECONDITION_FAILED, status: 400, message: A precondition failed., meaning: The action requires the target resource to be in a particular state and it is not (e.g. acting on an already-deleted object).}
+- {code: NOT_IMPLEMENTED, status: 400, message: Not yet implemented., meaning: Behavior is recognized but not available yet., gotcha: 'Despite the name this returns 400, NOT 501 — treat it as a client-facing "not supported".'}
+- {code: NOT_AUTHENTICATED, status: 401, message: The caller is not authenticated., meaning: No access token sent, or it is missing, malformed, or expired.}
+- {code: NOT_ALLOWED, status: 403, message: The requested action is not allowed., meaning: Caller is authenticated but lacks permission for this specific action.}
+- {code: NOT_FOUND, status: 404, message: The requested object could not be found., meaning: The addressed resource does not exist OR is not visible to the caller — the API deliberately does not distinguish the two, to avoid leaking existence of resources you cannot access.}
+- {code: INTERNAL_SERVER_ERROR, status: 500, message: The server encountered an unexpected condition that prevented it from fulfilling the request., meaning: Unexpected server-side failure unrelated to request content.}
+status_to_codes:
+  '400': [INVALID_INPUT, ID_NOT_UNIQUE, KEYS_NOT_UNIQUE, INVALID_ID_REFERENCE, INVALID_VALUE, PRECONDITION_FAILED, NOT_IMPLEMENTED]
+  '401': [NOT_AUTHENTICATED]
+  '403': [NOT_ALLOWED]
+  '404': [NOT_FOUND]
+  '500': [INTERNAL_SERVER_ERROR]
+agent_guidance:
+- >-
+  Match on `code`, never on HTTP status alone — seven distinct codes share HTTP 400.
+- >-
+  Match on `code`, never on the response NAME in the OpenAPI reference: a 403 is
+  documented under both "Forbidden" and "Unauthorized" depending on the endpoint, but
+  both behave identically (HTTP 403, code NOT_ALLOWED).
+- >-
+  An infeasible plan is NOT an error. Submitting a plan the engine cannot fully
+  satisfy still returns 200/201; unplanned stops surface in the solution as
+  `unaffectedStopIds` and constraint violations, not as an Error object.
+- >-
+  Do not assume this list is exhaustive across versions. The provider states the
+  codes are compiled from the current server implementation and are NOT exposed as a
+  formal enum on the Error.code field in the spec schema.
+known_gaps:
+- >-
+  `Error.code` is not constrained by an `enum` in the OpenAPI, so a generated client
+  cannot validate codes against the spec.
+- >-
+  The `properties` object keys are undocumented per code and the provider marks them
+  as informational and not stable pending backend confirmation.
+- >-
+  The 429 returned by the OTP resend endpoints (/auth/mfa/resendOTP,
+  /login/resendOTP) does NOT use the EnvelopedErrors format and currently returns no
+  structured JSON body.
+- >-
+  In the OpenAPI itself the Error and EnvelopedErrors schema descriptions are still
+  the placeholder string "[TO_VALIDATE] Description pending review by a Kardinal
+  engineer."
+see_also:
+  problem_types: errors/kardinal-problem-types.yml
+  authentication: authentication/kardinal-authentication.yml
+  conventions: conventions/kardinal-conventions.yml

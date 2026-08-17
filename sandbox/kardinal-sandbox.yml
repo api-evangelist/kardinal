@@ -1,0 +1,70 @@
+generated: '2026-08-17'
+method: searched
+source: https://developers.kardinal.ai/guides/sandbox-to-production
+model: separate-environment
+separation:
+  style: distinct host per environment
+  pattern: https://<env>.kardinal.ai
+  key_prefixes: none
+  note: >-
+    Kardinal does NOT use test-mode/live-mode key prefixes. Sandbox and production are
+    two entirely separate deployments, each with its own host, its own username and
+    password, its own tokens, and its own data. Nothing created in one is visible from
+    the other, and a sandbox token fails authentication against the production host
+    rather than silently touching the wrong data.
+environments:
+- name: sandbox
+  host_pattern: https://<env>.kardinal.ai
+  credentials: dedicated username/password, provisioned separately
+  data: isolated
+- name: production
+  host_pattern: https://<env>.kardinal.ai
+  credentials: dedicated username/password, provisioned separately
+  data: isolated
+provisioning:
+  self_serve: false
+  note: >-
+    There is currently no self-serve sandbox sign-up for the shipped ARO v2 API. Each
+    environment is provisioned by an Account Executive; contact api@kardinal.ai. The
+    announced self-serve v1 product promises an instant sandbox key, but its console
+    host does not yet resolve — see lifecycle/kardinal-lifecycle.yml.
+test_values:
+  cards: null
+  accounts: null
+  magic_identifiers: null
+  note: >-
+    Not a payments or messaging API — there are no test cards, test bank accounts or
+    magic test identifiers. The equivalent smoke-test affordance is the crow-fly
+    vehicle profile described below.
+fixtures:
+- name: crow-fly vehicle profile
+  value: '{"type": "fly", "kmph": 20}'
+  purpose: >-
+    A straight-line distance profile that is fast to compute and intended for a first
+    test. The docs advise moving to a real `car` or `truck` profile before going
+    further than a smoke test.
+  source: https://developers.kardinal.ai/getting-started/first-api-call
+- name: published minimal plan
+  purpose: The smallest viable plan — one resource and three pickup-only orders in Paris.
+  stops:
+  - {id: Balard, lon: 2.279424, lat: 48.835749, kind: pickup, operationDuration: PT5M30S}
+  - {id: Dauphine, lon: 2.274264, lat: 48.870087, kind: pickup, operationDuration: PT5M30S}
+  - {id: Station-f, lon: 2.370564, lat: 48.83476, kind: pickup, operationDuration: PT5M30S}
+  maxOptimizationDuration: PT1M
+  source: https://developers.kardinal.ai/getting-started/first-api-call
+  note: Values transcribed verbatim from the provider's published tutorial.
+unauthenticated_endpoints:
+- operationId: getPublicKey
+  path: GET /public_key
+  note: >-
+    The token-verification public key is served without authentication and is the one
+    endpoint an integrator can call before being provisioned. Probed live at
+    https://app.kardinal.ai/api/v2/public_key on 2026-08-17 (HTTP 200, ES384 JWK).
+promotion_checklist:
+  source: https://developers.kardinal.ai/guides/sandbox-to-production
+  steps:
+  - Confirm account-specific quotas (rate limit, max payload size, simultaneous-running-plans threshold) with support@kardinal.ai — these are not published.
+  - Re-run the integration against production with real data volumes and re-check maxOptimizationDuration sizing.
+  - Re-verify geocoding — Kardinal does not geocode addresses, so the integrator's own geocoding pipeline must be wired up for production data.
+  - Point any webhooks at the production environment's URLs.
+  - Rotate to production credentials everywhere, including secrets-manager entries.

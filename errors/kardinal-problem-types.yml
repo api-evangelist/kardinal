@@ -1,0 +1,221 @@
+generated: '2026-08-17'
+method: derived
+source: openapi/kardinal-aro-openapi-original.yml
+enriched_from: https://developers.kardinal.ai/reference/error-codes
+format: proprietary-envelope
+rfc9457: false
+envelope_schema: EnvelopedErrors
+note: Derived by aggregating every 4xx/5xx response declared across the 40 operations in the Kardinal
+  ARO OpenAPI. Business error codes carried inside the envelope are catalogued in errors/kardinal-error-codes.yml.
+problems:
+- status: 400
+  titles:
+  - The server could not understand the request due to invalid content (bad syntax, bad format, bad values,
+    etc).
+  response_components:
+  - BadRequest
+  - EnvelopedErrors
+  content_types:
+  - application/json
+  operation_count: 21
+  operations:
+  - disableMFAConfig
+  - getLoginMethods
+  - postLogin
+  - postLoginOTP
+  - postLoginRefresh
+  - postLoginWithAzureSSO
+  - postLoginWithGoogleSSO
+  - postRequestPasswordToken
+  - postSimplePlan
+  - putForbidResourceStop
+  - putMFAConfigPreferredType
+  - putPlan
+  - putPlanOrder
+  - putPlanResource
+  - putPlanResourceState
+  - putPlanRunning
+  - regenerateMFABackupCodes
+  - requestMFAConfigUpdate
+  - resetPassword
+  - validateMFAConfigUpdate
+  - validatePasswordToken
+- status: 401
+  titles:
+  - The caller is not authenticated.
+  response_components:
+  - EnvelopedErrors
+  - NotAuthenticated
+  content_types:
+  - application/json
+  operation_count: 33
+  operations:
+  - checkPlanManualMode
+  - deletePlan
+  - deletePlanOrder
+  - deletePlanResource
+  - disableMFAConfig
+  - fetchLastNPlanStates
+  - fetchLastPlanState
+  - getActorMFAConfig
+  - getPlan
+  - getPlanOrder
+  - getPlanResource
+  - getPlanResourceState
+  - getPlanSolution
+  - getPlanSolutionObjectives
+  - getPlanStatus
+  - getPlans
+  - postLoginRefresh
+  - postLoginWithAzureSSO
+  - postLoginWithGoogleSSO
+  - postSimplePlan
+  - putForbidResourceStop
+  - putMFAConfigPreferredType
+  - putPlan
+  - putPlanMode
+  - putPlanOrder
+  - putPlanResource
+  - putPlanResourceState
+  - putPlanRunning
+  - regenerateMFABackupCodes
+  - requestMFAConfigUpdate
+  - requestNewLoginOTPCode
+  - requestNewMFAOTPCode
+  - validateMFAConfigUpdate
+- status: 403
+  titles:
+  - The caller is not allowed to perform this action.
+  - The caller is not authorized to perform this action.
+  response_components:
+  - EnvelopedErrors
+  - Forbidden
+  - Unauthorized
+  content_types:
+  - application/json
+  operation_count: 35
+  operations:
+  - checkPlanManualMode
+  - deletePlan
+  - deletePlanOrder
+  - deletePlanResource
+  - disableMFAConfig
+  - fetchLastNPlanStates
+  - fetchLastPlanState
+  - getActorMFAConfig
+  - getPlan
+  - getPlanOrder
+  - getPlanResource
+  - getPlanResourceState
+  - getPlanSolution
+  - getPlanSolutionObjectives
+  - getPlanStatus
+  - getPlans
+  - postLogin
+  - postLoginOTP
+  - postLoginRefresh
+  - postLoginWithAzureSSO
+  - postLoginWithGoogleSSO
+  - postSimplePlan
+  - putForbidResourceStop
+  - putMFAConfigPreferredType
+  - putPlan
+  - putPlanMode
+  - putPlanOrder
+  - putPlanResource
+  - putPlanResourceState
+  - putPlanRunning
+  - regenerateMFABackupCodes
+  - requestMFAConfigUpdate
+  - requestNewLoginOTPCode
+  - requestNewMFAOTPCode
+  - validateMFAConfigUpdate
+- status: 404
+  titles:
+  - The specified resource was not found.
+  response_components:
+  - EnvelopedErrors
+  - NotFound
+  content_types:
+  - application/json
+  operation_count: 21
+  operations:
+  - checkPlanManualMode
+  - deletePlan
+  - deletePlanOrder
+  - deletePlanResource
+  - fetchLastPlanState
+  - getPlan
+  - getPlanOrder
+  - getPlanResource
+  - getPlanResourceState
+  - getPlanSolution
+  - getPlanSolutionObjectives
+  - getPlanStatus
+  - getPlans
+  - postSimplePlan
+  - putForbidResourceStop
+  - putPlan
+  - putPlanMode
+  - putPlanOrder
+  - putPlanResource
+  - putPlanResourceState
+  - putPlanRunning
+- status: 429
+  titles:
+  - Too many requests.
+  response_components: []
+  content_types: []
+  operation_count: 2
+  operations:
+  - requestNewLoginOTPCode
+  - requestNewMFAOTPCode
+- status: 500
+  titles:
+  - An internal server error has occurred.
+  response_components:
+  - EnvelopedErrors
+  - InternalServerError
+  content_types:
+  - application/json
+  operation_count: 39
+  operations:
+  - checkPlanManualMode
+  - deletePlan
+  - deletePlanOrder
+  - deletePlanResource
+  - disableMFAConfig
+  - fetchLastNPlanStates
+  - fetchLastPlanState
+  - getActorMFAConfig
+  - getLoginMethods
+  - getPlan
+  - getPlanOrder
+  - getPlanResource
+  - getPlanResourceState
+  - getPlanSolution
+  - getPlanSolutionObjectives
+  - getPlanStatus
+  - getPlans
+  - postLogin
+  - postLoginOTP
+  - postLoginRefresh
+  - postLoginWithAzureSSO
+  - postLoginWithGoogleSSO
+  - postRequestPasswordToken
+  - postSimplePlan
+  - putForbidResourceStop
+  - putMFAConfigPreferredType
+  - putPlan
+  - putPlanMode
+  - putPlanOrder
+  - putPlanResource
+  - putPlanResourceState
+  - putPlanRunning
+  - regenerateMFABackupCodes
+  - requestMFAConfigUpdate
+  - requestNewLoginOTPCode
+  - requestNewMFAOTPCode
+  - resetPassword
+  - validateMFAConfigUpdate
+  - validatePasswordToken

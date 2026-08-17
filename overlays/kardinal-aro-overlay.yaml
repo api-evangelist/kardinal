@@ -1,0 +1,107 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the Kardinal ARO API
+  version: 1.0.0
+extends: openapi/kardinal-aro-openapi-original.yml
+x-generated: '2026-08-17'
+x-method: generated
+x-source: >-
+  Derived from the verbatim OpenAPI at https://developers.kardinal.ai/openapi.yaml
+  plus the Kardinal developer portal. This overlay records API Evangelist's
+  enhancements; it never mutates the harvested specification.
+actions:
+- target: $.info
+  update:
+    x-apievangelist-profile: https://apis.io/provider/kardinal
+    x-apievangelist-enriched: '2026-08-17'
+    x-api-surface: REST
+    x-provisioning: invitation-only, per-customer environment, no self-serve sign-up
+- target: $.servers
+  description: >-
+    The harvested spec declares only the relative server "/api/v2", which leaves an
+    agent with no host to call. The developer portal states the real base is a
+    templated per-customer environment host, verified live on the example
+    environment. Recorded as an annotation rather than a replacement so the original
+    servers block is preserved.
+  update:
+    x-apievangelist-base-url: https://{env}.kardinal.ai/api/v2
+    x-apievangelist-base-url-verified:
+      url: https://app.kardinal.ai/api/v2/public_key
+      http_status: 200
+      fetched: '2026-08-17'
+- target: $.components.securitySchemes.access_token
+  update:
+    x-token-lifetime: PT1H
+    x-refresh-operation: postLoginRefresh
+    x-verification-endpoint: /public_key
+    x-verification-algorithm: ES384
+- target: $.components.schemas.Error
+  description: >-
+    The spec leaves Error.code unconstrained and its descriptions are still the
+    placeholder "[TO_VALIDATE] Description pending review by a Kardinal engineer."
+    The provider publishes the real code list on the error-codes reference page.
+  update:
+    x-error-codes:
+    - INVALID_INPUT
+    - ID_NOT_UNIQUE
+    - KEYS_NOT_UNIQUE
+    - INVALID_ID_REFERENCE
+    - INVALID_VALUE
+    - PRECONDITION_FAILED
+    - NOT_IMPLEMENTED
+    - NOT_AUTHENTICATED
+    - NOT_ALLOWED
+    - NOT_FOUND
+    - INTERNAL_SERVER_ERROR
+    x-error-codes-source: https://developers.kardinal.ai/reference/error-codes
+    x-error-codes-authoritative: false
+    x-error-codes-note: >-
+      Compiled by the provider from the current server implementation and explicitly
+      not guaranteed exhaustive across versions.
+    x-apievangelist-catalog: errors/kardinal-error-codes.yml
+- target: $.paths['/agencies/{agencyId}/plans/{planId}'].put
+  update:
+    x-idempotent: true
+    x-idempotency-mechanism: natural-key upsert on the client-supplied planId
+    x-idempotency-note: >-
+      Retry-safe with respect to state — replaying the same PUT converges on the same
+      plan rather than creating a duplicate — but NOT compute-free, because each
+      accepted version restarts optimization.
+- target: $.paths['/agencies/{agencyId}/plans/{planId}/resources/{resourceId}'].put
+  update:
+    x-idempotent: true
+    x-idempotency-mechanism: natural-key upsert on the client-supplied resourceId
+- target: $.paths['/agencies/{agencyId}/plans/{planId}/orders/{orderId}'].put
+  update:
+    x-idempotent: true
+    x-idempotency-mechanism: natural-key upsert on the client-supplied orderId
+- target: $.paths['/agencies/{agencyId}/plans/{planId}/status'].get
+  update:
+    x-polling-endpoint: true
+    x-polling-note: >-
+      Kardinal publishes no webhook or event surface; this is the sanctioned way to
+      learn that a new solution is ready.
+    x-stages: [waitingRoom, creation, optimization, waitingTraffic]
+- target: $.paths['/auth/mfa/resendOTP'].post
+  update:
+    x-rate-limited: true
+    x-rate-limit-status: 429
+    x-rate-limit-body: >-
+      The 429 does not use the EnvelopedErrors envelope and currently returns no
+      structured JSON body.
+- target: $.paths['/login/resendOTP'].post
+  update:
+    x-rate-limited: true
+    x-rate-limit-status: 429
+    x-rate-limit-body: >-
+      The 429 does not use the EnvelopedErrors envelope and currently returns no
+      structured JSON body.
+- target: $.paths['/public_key'].get
+  update:
+    x-unauthenticated: true
+    x-observed:
+      url: https://app.kardinal.ai/api/v2/public_key
+      http_status: 200
+      key_type: EC P-384
+      algorithm: ES384
+      fetched: '2026-08-17'

@@ -1,19 +1,78 @@
 aid: kardinal
 name: Kardinal
-description: 'Kardinal is a company surfaced as a portfolio company of serena and added to the API Evangelist
-  network as a stub for enrichment. Sector: saas. This profile is a lead awaiting the enrichment pipeline.'
+description: >-
+  Kardinal is a Paris-based logistics optimization company whose Always-on Route
+  Optimization (ARO) API solves vehicle routing problems for last-mile delivery,
+  post and parcel, waste and bulk transport, fresh delivery, field services and
+  retail operators. Integrators submit a plan — resources (vehicles), orders
+  (stops) and constraints such as capacities, time windows, driver skills and
+  breaks — with a single idempotent PUT, and the engine optimizes it continuously
+  rather than in a nightly batch, so new orders, cancellations, traffic and field
+  updates are absorbed into the running solution instead of forcing a rerun. The
+  REST API is documented with a published OpenAPI 3.0.3 definition covering 40
+  operations across authentication, plans, resources, orders and solutions, and is
+  reachable per customer environment at https://<env>.kardinal.ai/api/v2 using
+  short-lived JWT bearer tokens.
+image: https://kardinal.ai/wp-content/uploads/2020/01/cropped-Icon-blue-270x270.png
 url: https://raw.githubusercontent.com/api-evangelist/kardinal/refs/heads/main/apis.yml
 x-type: company
 x-source: serena-portfolio
-x-tier: stub
-x-tier-reason: portfolio-lead
+x-enrichment:
+  date: '2026-08-17'
+  status: enriched
+  artifacts_added: 27
+  pass: local-v1
 specificationVersion: '0.20'
 created: '2026-08-17'
 modified: '2026-08-17'
 tags:
 - Company
-- Saas
-apis: []
+- SaaS
+- Route Optimization
+- Vehicle Routing
+- Last Mile Delivery
+- Logistics
+- Supply Chain
+- Transportation
+- Fleet Management
+- Optimization
+apis:
+- aid: kardinal:aro
+  name: Kardinal ARO API
+  description: >-
+    The Kardinal Always-on Route Optimization (ARO) v2 REST API. Create and update
+    optimization plans, manage the resources (vehicles) and orders (stops) inside
+    them, drive the optimization lifecycle, and retrieve the computed solution with
+    per-resource tours, waypoint arrival times, objectives and unaffected stops.
+    Authentication is JWT bearer, with password login, MFA/OTP, Azure and Google SSO,
+    and a refresh-token flow. Access is provisioned by invitation per customer
+    environment; there is no self-serve sign-up.
+  humanURL: https://developers.kardinal.ai/
+  baseURL: https://app.kardinal.ai/api/v2
+  tags:
+  - Route Optimization
+  - Vehicle Routing
+  - Logistics
+  - Optimization
+  properties:
+  - type: OpenAPI
+    url: openapi/kardinal-aro-openapi-original.yml
+  - type: Documentation
+    url: https://developers.kardinal.ai/
+  - type: APIReference
+    url: https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token
+  - type: GettingStarted
+    url: https://developers.kardinal.ai/getting-started/first-api-call
+  - type: Authentication
+    url: authentication/kardinal-authentication.yml
+  - type: ErrorCatalog
+    url: errors/kardinal-error-codes.yml
+  - type: DataModel
+    url: data-model/kardinal-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/kardinal-tool-crosswalk.yml
+  - type: Overlay
+    url: overlays/kardinal-aro-overlay.yaml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
@@ -22,3 +81,64 @@ maintainers:
 common:
 - type: Website
   url: https://kardinal.ai/
+- type: DeveloperPortal
+  url: https://developers.kardinal.ai/
+- type: Documentation
+  url: https://developers.kardinal.ai/
+- type: APIReference
+  url: https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token
+- type: GettingStarted
+  url: https://developers.kardinal.ai/getting-started/first-api-call
+- type: Support
+  url: https://kardinal.ai/contact/
+- type: Blog
+  url: https://kardinal.ai/blog/
+- type: BlogRSS
+  url: https://kardinal.ai/feed/
+- type: GitHubOrganization
+  url: https://github.com/KardinalAI
+- type: Pricing
+  url: https://kardinal.ai/route-optimization-api/
+- type: TermsOfService
+  name: Terms of Service (Laskar mobile application)
+  url: https://kardinal.ai/terms-of-service-laskar/
+- type: PrivacyPolicy
+  url: https://kardinal.ai/privacy-policy/
+- type: LegalNotice
+  url: https://kardinal.ai/legal-notice/
+- type: FAQ
+  url: https://kardinal.ai/fr/faq-route-optimization/
+- type: MCPServer
+  url: mcp/kardinal-mcp.yml
+- type: ToolCrosswalk
+  url: mcp/kardinal-tool-crosswalk.yml
+- type: AgentCard
+  url: a2a/kardinal-a2a.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: LLMsTxt
+  url: llms/kardinal-llms.txt
+- type: Authentication
+  url: authentication/kardinal-authentication.yml
+- type: Conventions
+  url: conventions/kardinal-conventions.yml
+- type: Idempotency
+  url: conventions/kardinal-conventions.yml
+- type: ErrorCatalog
+  url: errors/kardinal-error-codes.yml
+- type: Lifecycle
+  url: lifecycle/kardinal-lifecycle.yml
+- type: Conformance
+  url: conformance/kardinal-conformance.yml
+- type: DataModel
+  url: data-model/kardinal-data-model.yml
+- type: Sandbox
+  url: sandbox/kardinal-sandbox.yml
+- type: Plans
+  url: plans/kardinal-plans-pricing.yml
+- type: Overlay
+  url: overlays/kardinal-aro-overlay.yaml
+- type: AgenticAccess
+  url: agentic-access/kardinal-agentic-access.yml
+- type: DomainSecurity
+  url: security/kardinal-domain-security.yml

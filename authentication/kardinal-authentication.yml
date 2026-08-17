@@ -1,0 +1,103 @@
+generated: '2026-08-17'
+method: searched
+source: openapi/kardinal-aro-openapi-original.yml
+docs: https://developers.kardinal.ai/guides/authentication
+summary:
+  types:
+  - http
+  http_schemes:
+  - bearer
+  bearer_formats:
+  - JWT
+  oauth2_flows: []
+  api_key_in: []
+  model: >-
+    Username/password exchanged for a short-lived JWT access token, sent as
+    `Authorization: Bearer <access_token>`. There is no long-lived, dashboard-issued
+    API key. Five distinct bearer token classes are declared in the spec, each gating
+    a different stage of the login / MFA / recovery lifecycle.
+schemes:
+- name: access_token
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  purpose: The working credential. Sent on every business operation (plans, resources, orders, solutions).
+  lifetime: 1 hour
+  sources: [openapi/kardinal-aro-openapi-original.yml]
+- name: refresh_token
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  purpose: Exchanged at POST /login/refresh for a new access_token without re-sending the password.
+  lifetime: 30 days (per the provider-published agent skill)
+  sources: [openapi/kardinal-aro-openapi-original.yml]
+- name: otp_token
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  purpose: Interim token issued by POST /login when MFA is configured; redeemed at POST /login/otp.
+  sources: [openapi/kardinal-aro-openapi-original.yml]
+- name: password_token
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  purpose: Issued by the password-reset request flow; redeemed at POST /auth/password/reset.
+  sources: [openapi/kardinal-aro-openapi-original.yml]
+- name: gdpr_token
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  purpose: Declared in the spec's securitySchemes for GDPR-scoped access.
+  sources: [openapi/kardinal-aro-openapi-original.yml]
+token_verification:
+  public_key_endpoint: GET /public_key
+  unauthenticated: true
+  formats: [JWK, PEM]
+  observed:
+    url: https://app.kardinal.ai/api/v2/public_key
+    http_status: 200
+    algorithm: ES384
+    key_type: EC P-384
+    note: >-
+      Probed anonymously on 2026-08-17 and returned a real JWK. Tokens are
+      asymmetrically signed, so integrators can verify them offline.
+flows:
+- name: password login
+  steps: [POST /login]
+  operation_ids: [postLogin]
+  returns: [access_token, refresh_token]
+- name: MFA / OTP login
+  steps: [POST /login, POST /login/otp]
+  operation_ids: [postLogin, postLoginOTP]
+  resend: {operation_id: requestNewLoginOTPCode, path: POST /login/resendOTP, rate_limited: true, status_on_exhaustion: 429}
+- name: token refresh
+  steps: [POST /login/refresh]
+  operation_ids: [postLoginRefresh]
+- name: Azure SSO
+  steps: [POST /login/sso/azure]
+  operation_ids: [postLoginWithAzureSSO]
+- name: Google SSO
+  steps: [POST /login/sso/google]
+  operation_ids: [postLoginWithGoogleSSO]
+- name: password reset
+  steps: [POST /auth/password/requestToken, POST /auth/password/validateToken, POST /auth/password/reset]
+  operation_ids: [postRequestPasswordToken, validatePasswordToken, resetPassword]
+- name: MFA configuration
+  steps: [GET /auth/mfa/config, POST /auth/mfa/request, POST /auth/mfa/validate, PUT /auth/mfa/preferredType, POST /auth/mfa/disable, PUT /auth/mfa/regenerateBackupCodes]
+  operation_ids: [getActorMFAConfig, requestMFAConfigUpdate, validateMFAConfigUpdate, putMFAConfigPreferredType, disableMFAConfig, regenerateMFABackupCodes]
+  resend: {operation_id: requestNewMFAOTPCode, path: POST /auth/mfa/resendOTP, rate_limited: true, status_on_exhaustion: 429}
+provisioning:
+  self_serve: false
+  model: invitation
+  note: >-
+    Per https://developers.kardinal.ai/getting-started/first-api-call, access is
+    provisioned by invitation — a user is invited to set a password on a per-customer
+    environment host, and there is no self-serve sign-up flow. Credentials are
+    requested from an Account Executive or api@kardinal.ai.
+  environments: per-customer, https://<env>.kardinal.ai, sandbox and production fully separate
+revocation:
+  self_service: false
+  note: >-
+    The docs state there is no documented self-service revocation endpoint; a
+    suspected compromise is handled by contacting api@kardinal.ai or the Account
+    Executive.

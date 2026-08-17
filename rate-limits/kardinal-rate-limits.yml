@@ -1,0 +1,61 @@
+generated: '2026-08-17'
+method: searched
+source: https://developers.kardinal.ai/reference/limits-and-quotas
+limit_count: 0
+published: false
+note: >-
+  Kardinal publishes a limits-and-quotas reference page, and that page states
+  explicitly that rate limits, max payload size and SLA are "Not yet published" for
+  BOTH sandbox and production, directing integrators to contact support@kardinal.ai
+  to confirm the values provisioned for their account. This is a recorded, deliberate
+  absence rather than a page we could not find — limit_count is 0 because no numeric
+  limit is published anywhere, and no `RateLimits` pointer is wired into apis.yml
+  because the provider does not publish a rate-limit signal.
+response_headers:
+  published: false
+  x_ratelimit: false
+  ratelimit_standard: false
+  retry_after: false
+  note: >-
+    No X-RateLimit-*, RateLimit-* or Retry-After response header is documented in the
+    docs or declared in the OpenAPI. An agent has no runtime signal to back off on.
+limits: []
+observed_429:
+- operationId: requestNewMFAOTPCode
+  path: POST /auth/mfa/resendOTP
+  status: 429
+  declared_in_spec: true
+  limit: undocumented
+  body: >-
+    Returns 429 when called too often, but currently WITHOUT a structured JSON body —
+    it does not follow the EnvelopedErrors format used by every other error.
+- operationId: requestNewLoginOTPCode
+  path: POST /login/resendOTP
+  status: 429
+  declared_in_spec: true
+  limit: undocumented
+  body: >-
+    Returns 429 when called too often, but currently WITHOUT a structured JSON body —
+    it does not follow the EnvelopedErrors format used by every other error.
+throughput_constraint:
+  name: simultaneous running plans
+  field: status.waitingRoom
+  published_value: null
+  note: >-
+    The one throughput ceiling the docs describe is account-specific and unpublished:
+    when an agency already has its maximum number of simultaneously running plans, a
+    new plan sits in a "waiting room" until a slot frees up. The threshold must be
+    confirmed per account with support@kardinal.ai.
+compute_budget:
+  platform_cap: none
+  field: maxOptimizationDuration
+  note: >-
+    There is no platform-wide cap on how long a plan may optimize; the integrator
+    sets maxOptimizationDuration per plan.
+quotas_by_environment:
+  sandbox: {rate_limit: not published, max_payload: not published, sla: not published}
+  production: {rate_limit: not published, max_payload: not published, sla: not published}
+evidence:
+- {url: 'https://developers.kardinal.ai/reference/limits-and-quotas', http_status: 200, fetched: '2026-08-17'}
+- {url: 'https://developers.kardinal.ai/guides/sandbox-to-production', http_status: 200, fetched: '2026-08-17'}
+- {url: 'https://developers.kardinal.ai/openapi.yaml', http_status: 200, fetched: '2026-08-17', note: two operations declare a 429 response}
