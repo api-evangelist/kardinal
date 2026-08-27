@@ -48,26 +48,16 @@ tags_raw:
 - Fleet Management
 - Optimization
 apis:
-- aid: kardinal:aro
-  name: Kardinal ARO API
-  description: >-
-    The Kardinal Always-on Route Optimization (ARO) v2 REST API. Create and update
-    optimization plans, manage the resources (vehicles) and orders (stops) inside
-    them, drive the optimization lifecycle, and retrieve the computed solution with
-    per-resource tours, waypoint arrival times, objectives and unaffected stops.
-    Authentication is JWT bearer, with password login, MFA/OTP, Azure and Google SSO,
-    and a refresh-token flow. Access is provisioned by invitation per customer
-    environment; there is no self-serve sign-up.
+- aid: kardinal:kardinal-authenticate-api
+  name: Kardinal Authenticate API
+  description: How to authenticate, and manage the access and refresh tokens.
   humanURL: https://developers.kardinal.ai/
   baseURL: https://app.kardinal.ai/api/v2
   tags:
-  - Route Optimization
-  - Vehicle Routing
-  - Logistics
-  - Optimization
+  - Authenticate
   properties:
   - type: OpenAPI
-    url: openapi/kardinal-aro-openapi-original.yml
+    url: openapi/kardinal-authenticate-api-openapi.yml
   - type: Documentation
     url: https://developers.kardinal.ai/
   - type: APIReference
@@ -82,8 +72,174 @@ apis:
     url: data-model/kardinal-data-model.yml
   - type: ToolCrosswalk
     url: mcp/kardinal-tool-crosswalk.yml
-  - type: Overlay
-    url: overlays/kardinal-aro-overlay.yaml
+- aid: kardinal:kardinal-core-api
+  name: Kardinal Core API
+  description: The Core API from Kardinal — 4 operation(s) for core.
+  humanURL: https://developers.kardinal.ai/
+  baseURL: https://app.kardinal.ai/api/v2
+  tags:
+  - Core
+  properties:
+  - type: OpenAPI
+    url: openapi/kardinal-core-api-openapi.yml
+  - type: Documentation
+    url: https://developers.kardinal.ai/
+  - type: APIReference
+    url: https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token
+  - type: GettingStarted
+    url: https://developers.kardinal.ai/getting-started/first-api-call
+  - type: Authentication
+    url: authentication/kardinal-authentication.yml
+  - type: ErrorCatalog
+    url: errors/kardinal-error-codes.yml
+  - type: DataModel
+    url: data-model/kardinal-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/kardinal-tool-crosswalk.yml
+- aid: kardinal:kardinal-management-api
+  name: Kardinal Management API
+  description: The Management API from Kardinal — 5 operation(s) for management.
+  humanURL: https://developers.kardinal.ai/
+  baseURL: https://app.kardinal.ai/api/v2
+  tags:
+  - Management
+  properties:
+  - type: OpenAPI
+    url: openapi/kardinal-management-api-openapi.yml
+  - type: Documentation
+    url: https://developers.kardinal.ai/
+  - type: APIReference
+    url: https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token
+  - type: GettingStarted
+    url: https://developers.kardinal.ai/getting-started/first-api-call
+  - type: Authentication
+    url: authentication/kardinal-authentication.yml
+  - type: ErrorCatalog
+    url: errors/kardinal-error-codes.yml
+  - type: DataModel
+    url: data-model/kardinal-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/kardinal-tool-crosswalk.yml
+- aid: kardinal:kardinal-order-api
+  name: Kardinal Order API
+  description: How to create, retrieve, update and delete orders in a plan.
+  humanURL: https://developers.kardinal.ai/
+  baseURL: https://app.kardinal.ai/api/v2
+  tags:
+  - Order
+  properties:
+  - type: OpenAPI
+    url: openapi/kardinal-order-api-openapi.yml
+  - type: Documentation
+    url: https://developers.kardinal.ai/
+  - type: APIReference
+    url: https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token
+  - type: GettingStarted
+    url: https://developers.kardinal.ai/getting-started/first-api-call
+  - type: Authentication
+    url: authentication/kardinal-authentication.yml
+  - type: ErrorCatalog
+    url: errors/kardinal-error-codes.yml
+  - type: DataModel
+    url: data-model/kardinal-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/kardinal-tool-crosswalk.yml
+- aid: kardinal:kardinal-plan-api
+  name: Kardinal Plan API
+  description: How to create, retrieve, update and delete plans.
+  humanURL: https://developers.kardinal.ai/
+  baseURL: https://app.kardinal.ai/api/v2
+  tags:
+  - Plan
+  properties:
+  - type: OpenAPI
+    url: openapi/kardinal-plan-api-openapi.yml
+  - type: Documentation
+    url: https://developers.kardinal.ai/
+  - type: APIReference
+    url: https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token
+  - type: GettingStarted
+    url: https://developers.kardinal.ai/getting-started/first-api-call
+  - type: Authentication
+    url: authentication/kardinal-authentication.yml
+  - type: ErrorCatalog
+    url: errors/kardinal-error-codes.yml
+  - type: DataModel
+    url: data-model/kardinal-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/kardinal-tool-crosswalk.yml
+- aid: kardinal:kardinal-resource-api
+  name: Kardinal Resource API
+  description: How to create, retrieve, update and delete resources in a plan.
+  humanURL: https://developers.kardinal.ai/
+  baseURL: https://app.kardinal.ai/api/v2
+  tags:
+  - Resource
+  properties:
+  - type: OpenAPI
+    url: openapi/kardinal-resource-api-openapi.yml
+  - type: Documentation
+    url: https://developers.kardinal.ai/
+  - type: APIReference
+    url: https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token
+  - type: GettingStarted
+    url: https://developers.kardinal.ai/getting-started/first-api-call
+  - type: Authentication
+    url: authentication/kardinal-authentication.yml
+  - type: ErrorCatalog
+    url: errors/kardinal-error-codes.yml
+  - type: DataModel
+    url: data-model/kardinal-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/kardinal-tool-crosswalk.yml
+- aid: kardinal:kardinal-simpleplan-api
+  name: Kardinal Simple Plan API
+  description: How to create a plan through the use of a simple plan.
+  humanURL: https://developers.kardinal.ai/
+  baseURL: https://app.kardinal.ai/api/v2
+  tags:
+  - SimplePlan
+  properties:
+  - type: OpenAPI
+    url: openapi/kardinal-simpleplan-api-openapi.yml
+  - type: Documentation
+    url: https://developers.kardinal.ai/
+  - type: APIReference
+    url: https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token
+  - type: GettingStarted
+    url: https://developers.kardinal.ai/getting-started/first-api-call
+  - type: Authentication
+    url: authentication/kardinal-authentication.yml
+  - type: ErrorCatalog
+    url: errors/kardinal-error-codes.yml
+  - type: DataModel
+    url: data-model/kardinal-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/kardinal-tool-crosswalk.yml
+- aid: kardinal:kardinal-solution-api
+  name: Kardinal Solution API
+  description: The Solution API from Kardinal — 2 operation(s) for solution.
+  humanURL: https://developers.kardinal.ai/
+  baseURL: https://app.kardinal.ai/api/v2
+  tags:
+  - Solution
+  properties:
+  - type: OpenAPI
+    url: openapi/kardinal-solution-api-openapi.yml
+  - type: Documentation
+    url: https://developers.kardinal.ai/
+  - type: APIReference
+    url: https://developers.kardinal.ai/api-reference/authenticate/request-a-password-token
+  - type: GettingStarted
+    url: https://developers.kardinal.ai/getting-started/first-api-call
+  - type: Authentication
+    url: authentication/kardinal-authentication.yml
+  - type: ErrorCatalog
+    url: errors/kardinal-error-codes.yml
+  - type: DataModel
+    url: data-model/kardinal-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/kardinal-tool-crosswalk.yml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
