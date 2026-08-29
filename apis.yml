@@ -13,6 +13,18 @@ description: >-
   operations across authentication, plans, resources, orders and solutions, and is
   reachable per customer environment at https://<env>.kardinal.ai/api/v2 using
   short-lived JWT bearer tokens.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - openapi
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://kardinal.ai/wp-content/uploads/2020/01/cropped-Icon-blue-270x270.png
 url: https://raw.githubusercontent.com/api-evangelist/kardinal/refs/heads/main/apis.yml
 x-type: company
