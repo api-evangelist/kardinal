@@ -1,0 +1,57 @@
+slug: kardinal
+provider: Kardinal
+generated_by: planning/capability-mapping/scripts/classify_capabilities.py
+model: claude-opus-5
+frame:
+- Transportation & Logistics
+min_confidence: 0.7
+capability_model:
+  source: https://github.com/vincentmakes/turbo-ea-capabilities
+  license: CC-BY-4.0
+  attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
+    CC BY 4.0
+  notice: NOTICE
+edge_count: 4
+edges:
+- tag: Core
+  spec_file: kardinal-core-api-openapi.yml
+  capability_id: BC-2420
+  capability_id_l1: BC-2420
+  capability_name: Transport Operations Management
+  confidence: 0.75
+  evidence: PUT /agencies/{agencyId}/plans/{planId}  putPlan  Create or update a plan; GET .../solution  Retrieve
+    a plan solution; schemas WayPointStop, ForbiddenAssignmentViolation
+  reason: Core surface submits a routing plan (vehicles/resources, stops, constraints) and returns the
+    optimised solution — vehicle routing for last-mile and field delivery execution, i.e. transport operations
+    planning/assignment. Login operations are incidental plumbing; L2 left open between dispatch assignment
+    and last-mile routing.
+- tag: Plan
+  spec_file: kardinal-plan-api-openapi.yml
+  capability_id: BC-2420
+  capability_id_l1: BC-2420
+  capability_name: Transport Operations Management
+  confidence: 0.75
+  evidence: PUT .../plans/{planId}/running  Stop or restart the optimization of a plan; GET .../solution/objectives  getPlanSolutionObjectives;
+    schemas WayPointStop, TourViolation-style PlanObjectives
+  reason: Full lifecycle of route-optimisation plans producing tours of waypoints for vehicles — multimodal/road
+    transport move planning and dispatchable assignment of stops to resources.
+- tag: SimplePlan
+  spec_file: kardinal-simpleplan-api-openapi.yml
+  capability_id: BC-2420
+  capability_id_l1: BC-2420
+  capability_name: Transport Operations Management
+  confidence: 0.7
+  evidence: POST /agencies/{agencyId}/simplePlans  postSimplePlan  Create a simple plan; schemas SimpleStop,
+    Break, TimeWindowBreak, Capacities
+  reason: Simplified submission of a routing problem (stops, breaks, time windows, capacities) to produce
+    a vehicle plan — transport move planning and dispatch preparation.
+- tag: Solution
+  spec_file: kardinal-solution-api-openapi.yml
+  capability_id: BC-2420
+  capability_id_l1: BC-2420
+  capability_name: Transport Operations Management
+  confidence: 0.7
+  evidence: GET /agencies/{agencyId}/plans/{planId}/solution  getPlanSolution; schemas Solution, WayPointStatus,
+    TourViolation, MaxWorkingDurationViolation, VehicleProfileScooter
+  reason: Returns the computed tours/waypoints per vehicle with constraint violations — the output of
+    route optimisation used to execute transport moves.

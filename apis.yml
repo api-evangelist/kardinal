@@ -258,6 +258,9 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: CapabilityMap
+  url: capabilities/kardinal-capability-edges.yml
+  name: Kardinal Business Capability Map
 - type: Website
   url: https://kardinal.ai/
 - type: DeveloperPortal
