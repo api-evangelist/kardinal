@@ -1,0 +1,465 @@
+openapi: 3.2.0
+info:
+  title: Kardinal ARO Simple Plan API
+  version: 2.55.0
+  description: This document specifies the REST API of Kardinal ARO v2.
+  contact:
+    url: https://kardinal.ai/
+    email: contact@kardinal.ai
+servers:
+- url: /api/v2
+security:
+- access_token: []
+tags:
+- name: SimplePlan
+  description: How to create a plan through the use of a simple plan.
+paths:
+  /agencies/{agencyId}/simplePlans:
+    parameters:
+    - $ref: '#/components/parameters/agencyId'
+    post:
+      summary: Create a simple plan
+      operationId: postSimplePlan
+      tags:
+      - SimplePlan
+      requestBody:
+        description: The SimplePlan to create.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimplePlan'
+      responses:
+        '201':
+          description: The simple plan was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopedSimplePlan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    Capacities:
+      type: object
+      additionalProperties:
+        type: number
+      example:
+        volume: 9.5
+        weight: 2200
+        nbPackages: 23
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    AgencyId:
+      description: The agency id.
+      readOnly: true
+      example: LND_Agency-42
+      allOf:
+      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
+    ErrorProperties:
+      type: object
+      additionalProperties:
+        type: string
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    SimplePlan:
+      type: object
+      description: A simple plan is a simplified representation of a plan, with simplified resources, simplified stops, and a simplified objective.
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        version:
+          $ref: '#/components/schemas/PlanVersion'
+        state:
+          $ref: '#/components/schemas/PlanState'
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleResource'
+        nbResources:
+          type: number
+          format: integer
+          minimum: 0
+          readOnly: true
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        stops:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleStop'
+        nbStops:
+          type: number
+          format: integer
+          minimum: 0
+          readOnly: true
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        objective:
+          $ref: '#/components/schemas/SimpleObjective'
+        tz:
+          $ref: '#/components/schemas/TimeZone'
+        lateDeparture:
+          description: True if lateDeparture is requested for Resources, false otherwise.
+          type: boolean
+          default: false
+        createdAt:
+          description: The plan's creation datetime.
+          readOnly: true
+          allOf:
+          - $ref: '#/components/schemas/DateTime'
+        createdBy:
+          type: string
+          description: The username of the user who created this simple plan
+          readOnly: true
+        updatedAt:
+          description: The plan's last update datetime.
+          readOnly: true
+          allOf:
+          - $ref: '#/components/schemas/DateTime'
+        updatedBy:
+          type:
+          - string
+          - 'null'
+          description: The username of the user who last updated this simple plan
+          readOnly: true
+        archivedAt:
+          description: 'The plan''s archiving datetime: if not null, the plan is archived.'
+          readOnly: true
+          example: null
+          allOf:
+          - $ref: '#/components/schemas/DateTime'
+      required:
+      - id
+      - agencyId
+      - resources
+    StopKind:
+      type: string
+      enum:
+      - pickup
+      - delivery
+      - acknowledgement
+      default: delivery
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PlanId:
+      description: The plan id.
+      readOnly: true
+      example: plan-AB
+      allOf:
+      - $ref: '#/components/schemas/RegexIdValidation'
+    PlanState:
+      type: string
+      readOnly: true
+      description: "The corresponding plan's state.\n  - waiting: The plan was received and is awaiting processing.\n  - processing: The plan is being processed.\n  - preOptimizing: The plan is being optimized while awaiting traffic or other information.\n  - preOptimized: While still awaiting traffic or other information, one of the following events has occurred:\n      no better solution can be produced, or the optimization period has reached its limit.\n      Note that 'preOptimized' should be followed by 'optimizing' and 'optimized'.\n  - optimizing: The plan is being optimized with all required information.\n  - optimized: This state can be triggered by one of the following events:\n      no better solution can be produced, or the optimization period has reached its limit.\n  - stopped: The plan's awaiting optimizations were canceled.\n  - deleted: The plan was deleted and awaiting optimizations were canceled.\n  - interrupted: The plan was either updated, stopped or deleted during its optimization.\n"
+      enum:
+      - waiting
+      - processing
+      - preOptimizing
+      - preOptimized
+      - optimizing
+      - optimized
+      - stopped
+      - deleted
+      - interrupted
+    Duration:
+      type: string
+      description: A period of time, expressed in the ISO8601 **duration** format.
+      pattern: ^P(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$
+      example: PT4M
+    Position:
+      type: object
+      properties:
+        lon:
+          type: number
+          minimum: -180
+          maximum: 180
+          description: Longitude coordinate.
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+          description: Latitude coordinate.
+      required:
+      - lon
+      - lat
+      example:
+        lon: 2.3269331
+        lat: 48.8812658
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EnvelopedErrors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RegexPrefixedIdValidation:
+      type: string
+      description: An id beginning with a prefix and an underscore.
+      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
+    SimpleObjective:
+      type: string
+      enum:
+      - minimizeResources
+      - minimizeWorkingDuration
+      - minimizeDistance
+      default: minimizeResources
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    Break:
+      oneOf:
+      - $ref: '#/components/schemas/TimeWindowBreak'
+      - $ref: '#/components/schemas/TravelDurationSlidingBreak'
+      - $ref: '#/components/schemas/WorkingDurationSlidingBreak'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    TimeWindowBreak:
+      type: object
+      description: A required break of a given duration in a given time window.
+      properties:
+        type:
+          type: string
+          enum:
+          - timeWindowBreak
+          description: 'Discriminator value: "timeWindowBreak". A standard break (e.g. lunch) defined by a fixed time frame.'
+        duration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The duration (ISO 8601) of the break.
+        timeWindow:
+          allOf:
+          - $ref: '#/components/schemas/TimeWindow'
+          description: The time frame within which the break must be taken. Acts similarly to a workingTimeWindow combined with a maxWorkingDuration.
+      required:
+      - duration
+      - timeWindow
+    TravelDurationSlidingBreak:
+      type: object
+      description: Limitation rule on max travel duration without any break.
+      properties:
+        type:
+          type: string
+          enum:
+          - travelDurationSlidingBreak
+          description: 'Discriminator value: "travelDurationSlidingBreak". Represents a break tied to driving time, such as a legal break required after a maximum amount of driving (for example, a 10-minute break every 4 hours of driving).'
+        minBreakDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The minimum duration of the break.
+        maxInterBreakDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The maximum duration of travel allowed between two breaks.
+      required:
+      - type
+      - minBreakDuration
+      - maxInterBreakDuration
+    PlanVersion:
+      type: integer
+      description: The plan version.
+      readOnly: true
+      minimum: 1
+      example: 42
+    TimeZone:
+      type: string
+      description: "The time zone is a string code which identifies a region of the world in the \"time zone database\", also called \"tz database\".\nThe tz database is a partition of the world into regions where local clocks all show the same time.\nThis database gives the rules for time offset and daylight saving time in each region.\n\nHow do we use it?\n\nIn order to work with time events accurately, we usually use datetimes in the iso-8601 format, without explicit time zone.\nThis format is quite well suported by many programming languages, and it is well suited for technical data exchange.\nBut it is not easy to use for humans.\n\nFor instance, here are three datetimes in iso-8601 format, which give the same exact moment in time:\n- \"2025-05-22T05:43:00Z\"\n- \"2025-05-22T06:43:00+01:00\"\n- \"2025-05-22T07:43:00+02:00\"\n\nFor a non-technical user, it is difficult to know how to relate this to the time displayed on a watch or a clock.\n\nWe improve the user experience by adding the support of local datetimes, thanks to the use of the time zone,\nwhich allows to transform a local datetime into an iso-8601 datetime:\n- local datetime + timezone (tz) = iso-8601 datetime\n\nFor instance, here are five datetimes which all give the same exact moment in time:\n- \"2025-05-22T05:43:00Z\"\n- \"2025-05-22T06:43:00+01:00\"\n- \"2025-05-22T07:43:00+02:00\"\n- \"2025-05-22 07:43:00\"       + timezone \"tz\": \"Europe/Paris\"\n- \"2025-05-22 07:43\"          + timezone \"tz\": \"Europe/Paris\"\n\nNote: the last example (\"2025-05-22 07:43\") illustrates the support of local datetimes without seconds,\nwhich can be very practical for users.\n\nIn order for local datetimes to be supported, some JSON input objects contain a \"tz\" time zone property.\nThis \"tz\" property is used to pre-process the JSON input payload, like this:\n- We check if a valid timezone can be extracted from the \"tz\" property,\n- If so, we perform the following actions:\n  - Walk through the whole JSON content to look for local datetimes,\n  - Use the timezone to transform each local datetime into an iso-8601 datetime.\n\nImportant: some objects contain a \"properties\" sub-object, which is a map of custom client data;\nthe content of the \"properties\" sub-objects is always excluded from the time zone pre-processing.\n"
+      externalDocs:
+        url: https://www.iana.org/time-zones
+      example: Europe/Paris
+    AtFirstPositionArrival:
+      type: string
+      description: The resource must go back to it's Tour first position.
+      enum:
+      - atFirstPosition
+    SimpleStop:
+      type: object
+      properties:
+        id:
+          description: Single stop ids must be unique within a plan.
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        position:
+          $ref: '#/components/schemas/Position'
+        kind:
+          $ref: '#/components/schemas/StopKind'
+        operationDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+        capacities:
+          allOf:
+          - $ref: '#/components/schemas/Capacities'
+        timeWindow:
+          $ref: '#/components/schemas/TimeWindow'
+      required:
+      - id
+      - position
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    UUID:
+      type: string
+      format: uuid
+      description: Universally Unique Identifier.
+      pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+      example: cd4ce4e3-0208-4b10-b346-25f235214e4f
+      readOnly: true
+    DateTime:
+      type: string
+      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
+      example: '2019-11-15T12:34:56Z'
+    RegexIdValidation:
+      type: string
+      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
+      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
+    WorkingDurationSlidingBreak:
+      type: object
+      description: Limitation rule on max working duration without any break.
+      properties:
+        type:
+          type: string
+          enum:
+          - workingDurationSlidingBreak
+          description: 'Discriminator value: "workDurationSlidingBreak". Represents a break tied to working time, such as a legal break required after a maximum amount of work (for example, a 10-minute break every 6 hours of work).'
+        minBreakDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The minimum duration of the break.
+        maxInterBreakDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The maximum duration of work allowed between two breaks.
+      required:
+      - type
+      - minBreakDuration
+      - maxInterBreakDuration
+    Error:
+      type: object
+      readOnly: true
+      properties:
+        code:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        message:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        properties:
+          $ref: '#/components/schemas/ErrorProperties'
+      required:
+      - message
+      - code
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EnvelopedSimplePlan:
+      type: object
+      properties:
+        item:
+          $ref: '#/components/schemas/SimplePlan'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+        planVersion:
+          $ref: '#/components/schemas/PlanVersion'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    SimpleResource:
+      type: object
+      properties:
+        id:
+          description: Resource ids must be unique within a plan.
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        capacities:
+          $ref: '#/components/schemas/Capacities'
+        departure:
+          $ref: '#/components/schemas/Position'
+        arrival:
+          oneOf:
+          - $ref: '#/components/schemas/Position'
+          - $ref: '#/components/schemas/AtFirstPositionArrival'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        workingTimeWindow:
+          $ref: '#/components/schemas/TimeWindow'
+        maxWorkingDuration:
+          $ref: '#/components/schemas/Duration'
+        maxDistanceInKm:
+          type: number
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        breaks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Break'
+      required:
+      - id
+      - workingTimeWindow
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    TimeWindow:
+      type: object
+      properties:
+        begin:
+          $ref: '#/components/schemas/DateTime'
+        end:
+          $ref: '#/components/schemas/DateTime'
+      required:
+      - begin
+      - end
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+  parameters:
+    agencyId:
+      name: agencyId
+      description: The agency id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/AgencyId'
+  responses:
+    Unauthorized:
+      description: The caller is not authorized to perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    BadRequest:
+      description: The server could not understand the request due to invalid content (bad syntax, bad format, bad values, etc).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    NotAuthenticated:
+      description: The caller is not authenticated.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    InternalServerError:
+      description: An internal server error has occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+  securitySchemes:
+    otp_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    gdpr_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    access_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    refresh_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    password_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,441 @@
+openapi: 3.2.0
+info:
+  title: Kardinal ARO Order API
+  version: 2.55.0
+  description: This document specifies the REST API of Kardinal ARO v2.
+  contact:
+    url: https://kardinal.ai/
+    email: contact@kardinal.ai
+servers:
+- url: /api/v2
+security:
+- access_token: []
+tags:
+- name: Order
+  description: How to create, retrieve, update and delete orders in a plan.
+paths:
+  /agencies/{agencyId}/plans/{planId}/orders/{orderId}:
+    parameters:
+    - $ref: '#/components/parameters/agencyId'
+    - $ref: '#/components/parameters/planId'
+    - $ref: '#/components/parameters/orderId'
+    get:
+      summary: Retrieve a plan's order
+      operationId: getPlanOrder
+      tags:
+      - Order
+      responses:
+        '200':
+          description: Order response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopedOrder'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Create or update a plan's order
+      operationId: putPlanOrder
+      tags:
+      - Order
+      parameters:
+      - $ref: '#/components/parameters/force'
+      requestBody:
+        description: The Order to update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '200':
+          description: Order response updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopedOrder'
+        '201':
+          description: Order response created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopedOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete a plan's order
+      operationId: deletePlanOrder
+      tags:
+      - Order
+      parameters:
+      - $ref: '#/components/parameters/force'
+      responses:
+        '204':
+          description: Order is deleted and no content is returned.
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    EnvelopedOrder:
+      type: object
+      properties:
+        item:
+          $ref: '#/components/schemas/Order'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+        planVersion:
+          $ref: '#/components/schemas/PlanVersion'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    Capacities:
+      type: object
+      additionalProperties:
+        type: number
+      example:
+        volume: 9.5
+        weight: 2200
+        nbPackages: 23
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    AgencyId:
+      description: The agency id.
+      readOnly: true
+      example: LND_Agency-42
+      allOf:
+      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
+    ErrorProperties:
+      type: object
+      additionalProperties:
+        type: string
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    StopKind:
+      type: string
+      enum:
+      - pickup
+      - delivery
+      - acknowledgement
+      default: delivery
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PlanId:
+      description: The plan id.
+      readOnly: true
+      example: plan-AB
+      allOf:
+      - $ref: '#/components/schemas/RegexIdValidation'
+    Duration:
+      type: string
+      description: A period of time, expressed in the ISO8601 **duration** format.
+      pattern: ^P(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$
+      example: PT4M
+    Position:
+      type: object
+      properties:
+        lon:
+          type: number
+          minimum: -180
+          maximum: 180
+          description: Longitude coordinate.
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+          description: Latitude coordinate.
+      required:
+      - lon
+      - lat
+      example:
+        lon: 2.3269331
+        lat: 48.8812658
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EnvelopedErrors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RegexPrefixedIdValidation:
+      type: string
+      description: An id beginning with a prefix and an underscore.
+      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
+    SingleStop:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - single
+          default: single
+          description: Discriminator identifying this as a single stop, as opposed to an alternatives stop. Set this explicitly in every stop object you send rather than relying on the default — a typed client library re-validating this payload (for example by re-parsing it through its own discriminated-union models) generally needs the tag present in the data itself to pick the right stop variant, and rejects an object that omits it even though the field defaults on this schema.
+        id:
+          description: Single stop ids must be unique within a plan.
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        properties:
+          $ref: '#/components/schemas/Properties'
+          description: Free-form key-value pairs (strings only) with no impact on optimization. Returned unchanged in the solution.
+        tags:
+          description: prefix:suffix best practice, not forced.
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+          example:
+          - access:parking33
+          - capa:bat22
+          - setup:france
+        position:
+          allOf:
+          - $ref: '#/components/schemas/Position'
+          description: The geographic coordinates (latitude and longitude) of the stop. Addresses must be geocoded beforehand.
+        kind:
+          $ref: '#/components/schemas/StopKind'
+          description: 'The type of operation performed at the stop (pickup, delivery, or acknowledgement), which determines how the stop''s capacities affect the resource''s load: added for a pickup, deducted for a delivery, and ignored for an acknowledgement (used to model interventions without cargo exchange).'
+        operationDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+        capacities:
+          allOf:
+          - $ref: '#/components/schemas/Capacities'
+          description: The capacities consumed or released at this stop, as free-form key-value pairs. Must match at least one resource's capacities in the plan for the algorithm to assign this stop to an eligible resource.
+        authorizedTimeWindows:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/TaggedTimeWindow'
+        preferredTimeWindows:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/TaggedTimeWindow'
+      required:
+      - id
+      - position
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PlanVersion:
+      type: integer
+      description: The plan version.
+      readOnly: true
+      minimum: 1
+      example: 42
+    DateTime:
+      type: string
+      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
+      example: '2019-11-15T12:34:56Z'
+    RegexIdValidation:
+      type: string
+      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
+      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
+    Stop:
+      oneOf:
+      - $ref: '#/components/schemas/SingleStop'
+      - $ref: '#/components/schemas/AlternativesStop'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    Properties:
+      type: object
+      additionalProperties:
+        type: string
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    Order:
+      type: object
+      properties:
+        id:
+          description: Order ids must be unique within a plan.
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        properties:
+          $ref: '#/components/schemas/Properties'
+          description: Free-form key-value pairs (strings only) with no impact on optimization, such as a client reference. Returned unchanged in the plan and its solution.
+        priority:
+          description: 0 by default, can be negative.
+          type: integer
+          default: 0
+        optional:
+          type: boolean
+          description: 'When true, this order is not mandatory: the algorithm may leave it unplanned without affecting the maximizeMandatoryStops objective, though it can still be scheduled via the maximizeOptionalStops objective. A shorthand for giving the order the lowest priority.'
+        requiredSkills:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+          example:
+          - forklift
+          - truck
+        stops:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Stop'
+          description: 'The ordered list of stops that make up this order. All stops of an order are planned onto the same resource, and their position in this array acts as a precedence constraint: the first stop must be visited before the second, and so on.'
+        successiveStops:
+          type: boolean
+          description: 'This constraint specifies that the stops within this order must be performed consecutively, without any intermediate stops from other orders. Useful when containers cannot be mixed, or to maintain a strict sequence of tasks. Mutually exclusive with maxStopSpan: only one of the two should be used.'
+        maxStopSpan:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+      required:
+      - id
+      - stops
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    Error:
+      type: object
+      readOnly: true
+      properties:
+        code:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        message:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        properties:
+          $ref: '#/components/schemas/ErrorProperties'
+      required:
+      - message
+      - code
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    TaggedTimeWindow:
+      type: object
+      description: TimeWindow with resource tags.
+      properties:
+        begin:
+          $ref: '#/components/schemas/DateTime'
+        end:
+          $ref: '#/components/schemas/DateTime'
+        resourceTags:
+          type: array
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+          example:
+          - subcontractorA
+          - subcontractorB
+      required:
+      - begin
+      - end
+    AlternativesStop:
+      type: object
+      description: A stop composed of different alternative single stops.
+      properties:
+        id:
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        type:
+          type: string
+          enum:
+          - alternatives
+          description: Discriminator identifying this as an alternatives stop, as opposed to a single stop.
+        alternatives:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/SingleStop'
+          description: The list of single stops among which the algorithm must choose the best one to visit (for example choosing among multiple charging points or waste disposal sites). Using alternatives can increase optimization time.
+      required:
+      - type
+      - alternatives
+  parameters:
+    force:
+      name: force
+      description: If true, on an archived item, the requested action will be forced and the item will be unarchived.
+      in: query
+      schema:
+        type: boolean
+        default: false
+    agencyId:
+      name: agencyId
+      description: The agency id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/AgencyId'
+    planId:
+      name: planId
+      description: The plan id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/RegexIdValidation'
+    orderId:
+      name: orderId
+      description: The order id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/RegexIdValidation'
+  responses:
+    Unauthorized:
+      description: The caller is not authorized to perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    BadRequest:
+      description: The server could not understand the request due to invalid content (bad syntax, bad format, bad values, etc).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    NotAuthenticated:
+      description: The caller is not authenticated.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    InternalServerError:
+      description: An internal server error has occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+  securitySchemes:
+    otp_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    gdpr_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    access_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    refresh_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    password_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

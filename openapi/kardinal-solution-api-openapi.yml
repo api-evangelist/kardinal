@@ -1,0 +1,1442 @@
+openapi: 3.2.0
+info:
+  title: Kardinal ARO Solution API
+  version: 2.55.0
+  description: This document specifies the REST API of Kardinal ARO v2.
+  contact:
+    url: https://kardinal.ai/
+    email: contact@kardinal.ai
+servers:
+- url: /api/v2
+security:
+- access_token: []
+tags:
+- name: Solution
+paths:
+  /agencies/{agencyId}/plans/{planId}/solution:
+    parameters:
+    - $ref: '#/components/parameters/agencyId'
+    - $ref: '#/components/parameters/planId'
+    get:
+      summary: Retrieve a plan solution
+      operationId: getPlanSolution
+      tags:
+      - Solution
+      responses:
+        '200':
+          description: Solution response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopedSolution'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /agencies/{agencyId}/plans/{planId}/solution/objectives:
+    parameters:
+    - $ref: '#/components/parameters/agencyId'
+    - $ref: '#/components/parameters/planId'
+    get:
+      summary: Retrieve the objectives of a plan solution
+      operationId: getPlanSolutionObjectives
+      tags:
+      - Solution
+      responses:
+        '200':
+          description: Solution objectives response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopedSolutionObjectives'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    Solution:
+      type: object
+      readOnly: true
+      properties:
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+        planVersion:
+          $ref: '#/components/schemas/PlanVersion'
+        timestamp:
+          allOf:
+          - $ref: '#/components/schemas/DateTime'
+        unaffectedStopIds:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+        unaffectedAlternativeIds:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+        unusedResourceIds:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+        objectives:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolutionObjective'
+          example:
+          - name: maximizeMandatoryStops
+            priority: 1
+            direction: maximize
+            value: 232
+          - name: minimizeDelay
+            direction: minimize
+            value: 3600
+          - name: minimizeResources
+            priority: 0
+            direction: minimize
+            value: 232
+          - name: maximizeOptionalStops
+            priority: 0
+            direction: maximize
+            value: 232
+          - name: minimizeLargestTourDuration
+            priority: 0
+            direction: minimize
+            value: 1000
+          - name: minimizeWorkingDuration
+            priority: 0
+            direction: minimize
+            value: 83430
+          - name: minimizeDistance
+            priority: 0
+            direction: minimize
+            value: 88232.4
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        tours:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Tour'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        totalDelay:
+          description: Total delay of the solution related to the preferred time windows.
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+        emptyDistanceInKm:
+          description: 'Total distance (in kilometers) traveled by all resources while "empty".
+
+            '
+          type: number
+          format: float
+          example: 123.45
+        CO2Emission:
+          description: 'Total CO2 emissions of the solution (sum of each tour''s `CO2Emission`).
+
+            Present only when at least one resource has a `CO2EmissionCalculation` (either on the resource itself or via `CO2EmissionCalculationByResourceTag` on the plan).
+
+            '
+          type: number
+          format: float
+          example: 67890.1
+        globalViolations:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/GlobalViolationMaxCumulatedCost'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    WayPointStatus:
+      type: string
+      enum:
+      - fixed
+      - assigned
+      - optimized
+      default: fixed
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    WayPointBegin:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - begin
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        position:
+          $ref: '#/components/schemas/Position'
+        status:
+          example: fixed
+          allOf:
+          - $ref: '#/components/schemas/WayPointStatus'
+        departureTime:
+          $ref: '#/components/schemas/DateTime'
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaypointViolation'
+          description: List of the Waypoint's violations.
+        fromPrevious:
+          $ref: '#/components/schemas/FromPrevious'
+      required:
+      - type
+      - position
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    OptimizationDirection:
+      type: string
+      enum:
+      - minimize
+      - maximize
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EnvelopedSolutionObjectives:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolutionObjective'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+        planVersion:
+          $ref: '#/components/schemas/PlanVersion'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    CountryCodes:
+      type: array
+      items:
+        $ref: '#/components/schemas/CountryCode'
+      example:
+      - Switzerland
+      - BE
+      - ITA
+    Capacities:
+      type: object
+      additionalProperties:
+        type: number
+      example:
+        volume: 9.5
+        weight: 2200
+        nbPackages: 23
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    TourViolation:
+      description: Semantic violations, can be handled "generically" or specifically.
+      oneOf:
+      - $ref: '#/components/schemas/BeginViolation'
+      - $ref: '#/components/schemas/EndViolation'
+      - $ref: '#/components/schemas/SkillsViolation'
+      - $ref: '#/components/schemas/ForbiddenAssignmentViolation'
+      - $ref: '#/components/schemas/AuthorizedTimeWindowViolation'
+      - $ref: '#/components/schemas/CapacityViolation'
+      - $ref: '#/components/schemas/AtLeastOneValidCapacityViolation'
+      - $ref: '#/components/schemas/SuccessiveStopsViolation'
+      - $ref: '#/components/schemas/OrderViolation'
+      - $ref: '#/components/schemas/MaxStopSpanViolation'
+      - $ref: '#/components/schemas/WorkingTimeWindowViolation'
+      - $ref: '#/components/schemas/MaxWorkingDurationViolation'
+      - $ref: '#/components/schemas/MaxDistanceInKmViolation'
+      - $ref: '#/components/schemas/MaxInterStopDistanceInKmViolation'
+      - $ref: '#/components/schemas/MaxInterStopDurationViolation'
+      - $ref: '#/components/schemas/StopIncompatibilityViolation'
+      - $ref: '#/components/schemas/AtLeastOneConstraintViolation'
+      - $ref: '#/components/schemas/MaxStopTagGroupsViolation'
+      - $ref: '#/components/schemas/RemovalStrategyViolation'
+    AgencyId:
+      description: The agency id.
+      readOnly: true
+      example: LND_Agency-42
+      allOf:
+      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
+    VehicleProfileScooter:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - scooter
+          description: 'Discriminator value: "scooter".'
+        avoidFerry:
+          type: boolean
+          description: When true, avoids ferry crossings when calculating routes.
+        avoidSeasonalClosure:
+          type: boolean
+          description: When true, avoids roads that are seasonally closed.
+        avoidCarShuttleTrain:
+          type: boolean
+          description: When true, avoids routes requiring a car shuttle train.
+        avoidTunnel:
+          type: boolean
+          description: When true, avoids tunnels.
+        avoidDirtRoad:
+          type: boolean
+          description: When true, avoids unpaved or dirt roads.
+        excludedCountries:
+          $ref: '#/components/schemas/CountryCodes'
+          description: The list of countries to exclude from calculated routes.
+        speedCap:
+          type: number
+          description: Caps the vehicle's maximum speed used in travel time calculations, in km/h.
+      required:
+      - type
+      description: A 50cc to 125cc motorized profile, with limited access to certain highways and high-speed roads. Unaffected by traffic variations.
+    FromPrevious:
+      type: object
+      description: The travel distance and duration from the previous waypoint to the current one.
+      properties:
+        travelDistanceInKm:
+          type: number
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        travelDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+      required:
+      - travelDistanceInKm
+      - travelDuration
+      example:
+        travelDistanceInKm: 2.3269331
+        travelDuration: PT4M
+    MaxInterStopDistanceInKmViolation:
+      type: object
+      description: Violation of a resource's MaxInterStopDistanceInKm constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - maxInterStopDistanceInKm
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        wayPointIndex:
+          type: integer
+          description: The idx of the waypoint the violation applies to.
+          example: 0
+        maxInterStopDistanceInKm:
+          description: The expected maximum inter-stop distance, in km.
+          type: number
+        exceededDistanceInKm:
+          description: The inter-stop distance that exceeds the maximum distance, in km.
+          type: number
+      required:
+      - type
+      - maxInterStopDistanceInKm
+      - exceededDistanceInKm
+    ErrorProperties:
+      type: object
+      additionalProperties:
+        type: string
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    ForbiddenAssignment:
+      type: object
+      description: Forbidden assignment by stop tag and resource tag.
+      properties:
+        resourceTag:
+          type: string
+          description: Resource tag.
+          example: trailer
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        stopTag:
+          type: string
+          description: Stop tag.
+          example: heavy
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+      required:
+      - resourceTag
+      - stopTag
+    WorkingTimeWindowViolation:
+      type: object
+      description: Violation of a resource's TimeWindow constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - workingTimeWindow
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        delay:
+          description: The delay that exceeds the resource's TimeWindow.
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+      required:
+      - type
+      - delay
+    MaxWorkingDurationViolation:
+      type: object
+      description: Violation of a resource's MaxWorkingDuration constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - maxWorkingDuration
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        maxWorkingDuration:
+          description: The expected maximum working duration.
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+        exceededDuration:
+          description: The duration that exceeds the maximum working duration.
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+      required:
+      - type
+      - maxWorkingDuration
+      - exceededDuration
+    OrderViolation:
+      type: object
+      description: Violation of a order's stops constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - order
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        expectedOrderedStopIds:
+          description: The stop ids in the expected order.
+          type: array
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+        missedStopIds:
+          description: The stop ids missing from the tour.
+          type: array
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+        badlyOrderedStopIds:
+          description: The stop ids badly ordered in the tour.
+          type: array
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+      required:
+      - type
+      - expectedOrderedStopIds
+    StopKind:
+      type: string
+      enum:
+      - pickup
+      - delivery
+      - acknowledgement
+      default: delivery
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PlanId:
+      description: The plan id.
+      readOnly: true
+      example: plan-AB
+      allOf:
+      - $ref: '#/components/schemas/RegexIdValidation'
+    MaxInterStopDurationViolation:
+      type: object
+      description: Violation of a resource's MaxInterStopDuration constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - maxInterStopDuration
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        wayPointIndex:
+          type: integer
+          description: The idx of the waypoint the violation applies to.
+          example: 0
+        maxInterStopDuration:
+          description: The expected maximum inter-stop duration.
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+        exceededDuration:
+          description: The inter-stop duration that exceeds the maximum duration.
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+      required:
+      - type
+      - maxInterStopDuration
+      - exceededDuration
+    WayPointEnd:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - end
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        position:
+          $ref: '#/components/schemas/Position'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/WayPointStatus'
+          example: optimized
+        arrivalTime:
+          $ref: '#/components/schemas/DateTime'
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaypointViolation'
+          description: List of the Waypoint's violations.
+        fromPrevious:
+          $ref: '#/components/schemas/FromPrevious'
+      required:
+      - type
+      - position
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    TunnelCategory:
+      type: string
+      enum:
+      - B
+      - C
+      - D
+      - E
+      description: Tunnel category restriction for truck routing (ADR tunnel categories)
+    Duration:
+      type: string
+      description: A period of time, expressed in the ISO8601 **duration** format.
+      pattern: ^P(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$
+      example: PT4M
+    CountryCode:
+      type: string
+      description: A country standard name or Alpha-2 code or Alpha-3 code.
+    BeginViolation:
+      type: object
+      description: Violation of a warehouse Constraint at the begining of a Tour.
+      properties:
+        type:
+          type: string
+          description: The violation's type.
+          enum:
+          - begin
+        wayPointIndex:
+          type: integer
+          description: The idx of the waypoint the violation applies to.
+          example: 0
+      required:
+      - type
+    EnvelopedErrors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    Position:
+      type: object
+      properties:
+        lon:
+          type: number
+          minimum: -180
+          maximum: 180
+          description: Longitude coordinate.
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+          description: Latitude coordinate.
+      required:
+      - lon
+      - lat
+      example:
+        lon: 2.3269331
+        lat: 48.8812658
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RegexPrefixedIdValidation:
+      type: string
+      description: An id beginning with a prefix and an underscore.
+      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
+    ResourceMode:
+      type: string
+      enum:
+      - free
+      - fixed
+      default: free
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    VehicleProfileBicycle:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - bicycle
+          description: 'Discriminator value: "bicycle".'
+        avoidFerry:
+          type: boolean
+          description: When true, avoids ferry crossings when calculating routes.
+        avoidSeasonalClosure:
+          type: boolean
+          description: When true, avoids roads that are seasonally closed.
+        avoidTunnel:
+          type: boolean
+          description: When true, avoids tunnels.
+        avoidDirtRoad:
+          type: boolean
+          description: When true, avoids unpaved or dirt roads.
+        excludedCountries:
+          $ref: '#/components/schemas/CountryCodes'
+          description: The list of countries to exclude from calculated routes.
+      required:
+      - type
+      description: A cyclist profile. Unaffected by traffic variations.
+    WayPointBreak:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - break
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        status:
+          example: optimized
+          allOf:
+          - $ref: '#/components/schemas/WayPointStatus'
+        arrivalTime:
+          $ref: '#/components/schemas/DateTime'
+        departureTime:
+          $ref: '#/components/schemas/DateTime'
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaypointViolation'
+          description: List of the Waypoint's violations.
+        fromPrevious:
+          $ref: '#/components/schemas/FromPrevious'
+      required:
+      - type
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    ShippedHazardousGood:
+      type: string
+      enum:
+      - explosive
+      - gas
+      - flammable
+      - combustible
+      - organic
+      - poison
+      - radioactive
+      - corrosive
+      - poisonousInhalation
+      - harmfulToWater
+      - other
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EndViolation:
+      type: object
+      description: Violation of a warehouse Constraint at the end of a Tour.
+      properties:
+        type:
+          type: string
+          enum:
+          - end
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        wayPointIndex:
+          type: integer
+          description: The idx of the waypoint the violation applies to.
+          example: 0
+      required:
+      - type
+    SuccessiveStopsViolation:
+      type: object
+      description: Violation of a order's succesive stops constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - successiveStops
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        expectedSuccessiveStopIds:
+          description: The stop ids in the expected order.
+          type: array
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+        interleavedStopIds:
+          description: The stop ids which are not expected and interleaved between the order stops.
+          type: array
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+      required:
+      - type
+      - expectedSuccessiveStopIds
+    VehicleProfileMotorbike:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - motorbike
+          description: 'Discriminator value: "motorbike".'
+        avoidFerry:
+          type: boolean
+          description: When true, avoids ferry crossings when calculating routes.
+        avoidSeasonalClosure:
+          type: boolean
+          description: When true, avoids roads that are seasonally closed.
+        avoidControlledAccessHighway:
+          type: boolean
+          description: When true, avoids controlled-access highways (e.g. motorways).
+        avoidCarShuttleTrain:
+          type: boolean
+          description: When true, avoids routes requiring a car shuttle train.
+        avoidTunnel:
+          type: boolean
+          description: When true, avoids tunnels.
+        avoidDirtRoad:
+          type: boolean
+          description: When true, avoids unpaved or dirt roads.
+        excludedCountries:
+          $ref: '#/components/schemas/CountryCodes'
+          description: The list of countries to exclude from calculated routes.
+        speedCap:
+          type: number
+          description: Caps the vehicle's maximum speed used in travel time calculations, in km/h.
+      required:
+      - type
+      description: A motorized profile for vehicles over 125cc, unrestricted in terms of roads. Unaffected by traffic variations.
+    WaypointViolation:
+      description: Semantic violations, can be handled "generically" or specifically.
+      oneOf:
+      - $ref: '#/components/schemas/BeginViolation'
+      - $ref: '#/components/schemas/EndViolation'
+      - $ref: '#/components/schemas/SkillsViolation'
+      - $ref: '#/components/schemas/ForbiddenAssignmentViolation'
+      - $ref: '#/components/schemas/AuthorizedTimeWindowViolation'
+      - $ref: '#/components/schemas/CapacityViolation'
+      - $ref: '#/components/schemas/AtLeastOneValidCapacityViolation'
+      - $ref: '#/components/schemas/MaxInterStopDistanceInKmViolation'
+      - $ref: '#/components/schemas/MaxInterStopDurationViolation'
+    PlanVersion:
+      type: integer
+      description: The plan version.
+      readOnly: true
+      minimum: 1
+      example: 42
+    AtLeastOneConstraintViolation:
+      type: object
+      description: Violation of a resource's AtLeastOneConstraint constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - atLeastOneConstraint
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        name:
+          description: The name of the AtLeastOneConstraint constraint the violation is linked to.
+          type: string
+        violatedConstraints:
+          description: Lists of sub-constraints violations.
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/TourViolation'
+      required:
+      - type
+      - name
+      - violatedConstraints
+    StopTagPair:
+      type: array
+      description: A pair of incompatible stop tags.
+      items:
+        description: Stop tag.
+        allOf:
+        - $ref: '#/components/schemas/RegexIdValidation'
+      minItems: 2
+      maxItems: 2
+      uniqueItems: true
+      example:
+      - goat
+      - cabbage
+    MaxDistanceInKmViolation:
+      type: object
+      description: Violation of a resource's MaxDistanceInKm constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - maxDistanceInKm
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        maxDistanceInKm:
+          description: The expected maximum distance, in km.
+          type: number
+        exceededDistanceInKm:
+          description: The distance that exceeds the maximum distance, in km.
+          type: number
+      required:
+      - type
+      - maxDistanceInKm
+      - exceededDistanceInKm
+    EnvelopedSolution:
+      type: object
+      properties:
+        item:
+          $ref: '#/components/schemas/Solution'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+        planVersion:
+          $ref: '#/components/schemas/PlanVersion'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RemovalStrategyViolation:
+      type: object
+      description: Violation of a resource's RemovalStrategy constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - removalStrategy
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        name:
+          description: The name of the RemovalStrategy constraint the violation is linked to.
+          type: string
+        removalStrategyType:
+          allOf:
+          - $ref: '#/components/schemas/RemovalStrategyType'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+      required:
+      - type
+      - removalStrategyType
+    VehicleProfileCar:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - car
+          description: 'Discriminator value: "car".'
+        withTraffic:
+          type: boolean
+          description: Enables the separately billed predictive traffic feature, which accounts for traffic variations by time slot and road segment so that tours remain resilient to fluctuations and road events beyond just average or live travel times.
+        avoidTollRoad:
+          type: boolean
+          description: When true, treats toll roads as restricted.
+        avoidFerry:
+          type: boolean
+          description: When true, avoids ferry crossings when calculating routes.
+        avoidSeasonalClosure:
+          type: boolean
+          description: When true, avoids roads that are seasonally closed.
+        avoidControlledAccessHighway:
+          type: boolean
+          description: When true, avoids controlled-access highways (e.g. motorways).
+        avoidCarShuttleTrain:
+          type: boolean
+          description: When true, avoids routes requiring a car shuttle train.
+        avoidTunnel:
+          type: boolean
+          description: When true, avoids tunnels.
+        avoidDirtRoad:
+          type: boolean
+          description: When true, avoids unpaved or dirt roads.
+        avoidUTurns:
+          type: boolean
+          description: When true, avoids U-turns when calculating routes.
+        excludedCountries:
+          $ref: '#/components/schemas/CountryCodes'
+          description: The list of countries to exclude from calculated routes.
+        speedCap:
+          type: number
+          description: Caps the vehicle's maximum speed used in travel time calculations, in km/h.
+      required:
+      - type
+      description: A light-weight vehicle profile. Affected by traffic variations.
+    VehicleProfilePedestrian:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - pedestrian
+          description: 'Discriminator value: "pedestrian".'
+        avoidFerry:
+          type: boolean
+          description: When true, avoids ferry crossings when calculating routes.
+        avoidSeasonalClosure:
+          type: boolean
+          description: When true, avoids roads that are seasonally closed.
+        avoidDirtRoad:
+          type: boolean
+          description: When true, avoids unpaved or dirt roads.
+        excludedCountries:
+          $ref: '#/components/schemas/CountryCodes'
+          description: The list of countries to exclude from calculated routes.
+      required:
+      - type
+      description: A walking "driver" profile. Pedestrians are unaffected by traffic variations.
+    GlobalViolationMaxCumulatedCost:
+      type: object
+      description: Violation linked to a MaxCumulatedCost global constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - maxCumulatedCost
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        name:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        resourceIds:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+        maximum:
+          type: number
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        exceededCost:
+          type: number
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    DateTime:
+      type: string
+      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
+      example: '2019-11-15T12:34:56Z'
+    AuthorizedTimeWindowViolation:
+      type: object
+      description: Violation of a stop's TimeWindow constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - authorizedTimeWindow
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        wayPointIndex:
+          type: integer
+          description: The idx of the waypoint the violation applies to.
+          example: 0
+        forbiddenWindow:
+          description: The violated forbidden window.
+          allOf:
+          - $ref: '#/components/schemas/TimeWindow'
+        actualTime:
+          description: The time at which the waypoint is actually executed.
+          allOf:
+          - $ref: '#/components/schemas/DateTime'
+      required:
+      - type
+      - forbiddenWindow
+      - actualTime
+    VehicleProfileTruck:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - truck
+          description: 'Discriminator value: "truck".'
+        grossWeight:
+          type: number
+          description: The weight of the vehicle while loaded, used to calculate impacts on road restrictions and travel times.
+        withTraffic:
+          type: boolean
+          description: Enables the separately billed predictive traffic feature, which accounts for traffic variations by time slot and road segment so that tours remain resilient to fluctuations and road events beyond just average or live travel times.
+        avoidTollRoad:
+          type: boolean
+          description: When true, treats toll roads as restricted.
+        avoidFerry:
+          type: boolean
+          description: When true, avoids ferry crossings when calculating routes.
+        avoidSeasonalClosure:
+          type: boolean
+          description: When true, avoids roads that are seasonally closed.
+        avoidControlledAccessHighway:
+          type: boolean
+          description: When true, avoids controlled-access highways (e.g. motorways).
+        avoidCarShuttleTrain:
+          type: boolean
+          description: When true, avoids routes requiring a car shuttle train.
+        avoidTunnel:
+          type: boolean
+          description: When true, avoids tunnels.
+        avoidDirtRoad:
+          type: boolean
+          description: When true, avoids unpaved or dirt roads.
+        avoidUTurns:
+          type: boolean
+          description: When true, avoids U-turns when calculating routes.
+        shippedHazardousGoods:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShippedHazardousGood'
+          example:
+          - explosive
+          - gas
+          - flammable
+          description: The list of hazardous goods restrictions carried by the vehicle (for example explosive, gas, flammable, combustible, organic, poison, radioactive, corrosive, poisonousInhalation, harmfulToWater, other), used to respect road transport restrictions.
+        excludedCountries:
+          $ref: '#/components/schemas/CountryCodes'
+          description: The list of countries to exclude from calculated routes.
+        height:
+          type: number
+          description: The vehicle's height in meters, used to respect road height restrictions.
+        width:
+          type: number
+          description: The vehicle's width in meters, used to respect road width restrictions.
+        length:
+          type: number
+          description: The vehicle's length in meters, used to respect road length restrictions.
+        tunnelCategory:
+          $ref: '#/components/schemas/TunnelCategory'
+          description: The vehicle's tunnel restriction category (relevant for hazardous goods transport), used to respect tunnel access restrictions.
+        speedCap:
+          type: number
+          description: Caps the vehicle's maximum speed used in travel time calculations, in km/h.
+      required:
+      - type
+      description: A heavy-weight vehicle profile. Affected by both traffic variations and road restrictions (weight, height, hazardous goods, etc.).
+    StopIncompatibilityViolation:
+      type: object
+      description: Violation of a resource's StopIncompatibility constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - stopIncompatibility
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        name:
+          description: The name of the StopIncompatibility constraint the violation is linked to.
+          type: string
+        incompatibilities:
+          description: Lists of stop ids for each incompatible tag.
+          type: array
+          items:
+            type: array
+            items:
+              allOf:
+              - $ref: '#/components/schemas/RegexIdValidation'
+              example:
+              - stop1
+              - stop2
+            minItems: 2
+            maxItems: 2
+        tags:
+          $ref: '#/components/schemas/StopTagPair'
+      required:
+      - type
+      - incompatibilities
+      - tags
+    RegexIdValidation:
+      type: string
+      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
+      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
+    ForbiddenAssignmentViolation:
+      type: object
+      description: Violation of a ForbiddenAssignment constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - forbiddenAssignment
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        wayPointIndex:
+          type: integer
+          description: The idx of the waypoint the violation applies to.
+          example: 0
+        forbiddenAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ForbiddenAssignment'
+          description: The list of forbidden assignments that are violated with the waypoint assigned to the resource.
+      required:
+      - type
+    CapacityViolation:
+      type: object
+      description: Violation of a resource's capacity constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - capacity
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        wayPointIndex:
+          type: integer
+          description: The idx of the waypoint the violation applies to.
+          example: 0
+        capacity:
+          type: string
+          description: The capacity's name the constraint is linked to.
+        overCapacity:
+          description: The exceeding capacity.
+          type: number
+      required:
+      - type
+      - capacity
+      - overCapacity
+    MaxStopTagGroupsViolation:
+      type: object
+      description: Violation of a resource's MaxStopTagGroups constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - maxStopTagGroups
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        name:
+          description: The name of the MaxStopTagGroups constraint the violation is linked to.
+          type: string
+        exceededNbGroupsByStopTag:
+          type: object
+          description: The exceeded number of groups by stop tag.
+          additionalProperties:
+            $ref: '#/components/schemas/ExceededNbGroups'
+      required:
+      - type
+      - exceededNbGroupsByStopTag
+    Properties:
+      type: object
+      additionalProperties:
+        type: string
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    AtLeastOneValidCapacityViolation:
+      type: object
+      description: Violation of a AtLeastOneValidCapacity constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - atLeastOneValidCapacity
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        wayPointIndex:
+          type: integer
+          description: The idx of the waypoint the violation applies to.
+          example: 0
+        name:
+          description: The name of the AtLeastOneValidCapacity constraint the violation is linked to.
+          type: string
+        overCapacities:
+          $ref: '#/components/schemas/Capacities'
+      required:
+      - type
+      - name
+      - overCapacities
+    Error:
+      type: object
+      readOnly: true
+      properties:
+        code:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        message:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        properties:
+          $ref: '#/components/schemas/ErrorProperties'
+      required:
+      - message
+      - code
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RemovalStrategyType:
+      type: string
+      enum:
+      - lifo
+      default: lifo
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    Tour:
+      type: object
+      properties:
+        resourceId:
+          type: string
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        mode:
+          $ref: '#/components/schemas/ResourceMode'
+        distanceInKm:
+          type: number
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        emptyDistanceInKm:
+          description: 'Distance (in kilometers) traveled by this resource while "empty" (i.e., with all capacities below their respective thresholds).
+
+            '
+          type: number
+          format: float
+          example: 10.5
+        tourCost:
+          type: number
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        CO2Emission:
+          description: 'Total CO2 emissions of this tour, based on the given definition in `CO2EmissionCalculation`.
+
+            Present only when the resource has a `CO2EmissionCalculation` (either on the resource itself or via `CO2EmissionCalculationByResourceTag` on the plan).
+
+            '
+          type: number
+          format: float
+          example: 12345.6
+        totalDelay:
+          description: Total delay of the tour related to the preferred time windows.
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+        travelDuration:
+          $ref: '#/components/schemas/Duration'
+        workingDuration:
+          $ref: '#/components/schemas/Duration'
+        waitingDuration:
+          $ref: '#/components/schemas/Duration'
+        resourceCapacities:
+          description: List of capacities and associated quantity for which the resource has a restriction on the quantity to be carried at each stop during the tour.
+          allOf:
+          - $ref: '#/components/schemas/Capacities'
+        maxFilledCapacities:
+          description: List of each capacity transported by the resource, as well as the maximum quantity reached for this capacity at a stop during the tour.
+          allOf:
+          - $ref: '#/components/schemas/Capacities'
+        filledCapacitiesAtBegin:
+          $ref: '#/components/schemas/Capacities'
+        filledCapacitiesAtEnd:
+          $ref: '#/components/schemas/Capacities'
+        isValid:
+          description: Indicates whether the tour satisfies all resource constraints.
+          type: boolean
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/TourViolation'
+          description: List of the Tour's violations.
+        wayPoints:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/WayPointBegin'
+            - $ref: '#/components/schemas/WayPointStop'
+            - $ref: '#/components/schemas/WayPointBreak'
+            - $ref: '#/components/schemas/WayPointEnd'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        vehicleProfile:
+          oneOf:
+          - $ref: '#/components/schemas/VehicleProfileFly'
+          - $ref: '#/components/schemas/VehicleProfilePedestrian'
+          - $ref: '#/components/schemas/VehicleProfileBicycle'
+          - $ref: '#/components/schemas/VehicleProfileScooter'
+          - $ref: '#/components/schemas/VehicleProfileMotorbike'
+          - $ref: '#/components/schemas/VehicleProfileCar'
+          - $ref: '#/components/schemas/VehicleProfileTruck'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    SkillsViolation:
+      type: object
+      description: Violation of a Skill constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - skills
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        wayPointIndex:
+          type: integer
+          description: The idx of the waypoint the violation applies to.
+          example: 0
+        lackingSkills:
+          type: array
+          description: The list of skills needed to do the waypoint that the resource lacks.
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+          example:
+          - forklift
+          - truck
+      required:
+      - type
+    WayPointStop:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - stop
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        stopId:
+          type: string
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        position:
+          $ref: '#/components/schemas/Position'
+        status:
+          example: optimized
+          allOf:
+          - $ref: '#/components/schemas/WayPointStatus'
+        stopProperties:
+          $ref: '#/components/schemas/Properties'
+        orderProperties:
+          $ref: '#/components/schemas/Properties'
+        filledCapacitiesAfterStop:
+          $ref: '#/components/schemas/Capacities'
+        delay:
+          description: Delay related to the stop's preferred time windows.
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+        arrivalTime:
+          $ref: '#/components/schemas/DateTime'
+        beginTime:
+          $ref: '#/components/schemas/DateTime'
+        departureTime:
+          $ref: '#/components/schemas/DateTime'
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaypointViolation'
+          description: List of the Waypoint's violations.
+        fromPrevious:
+          $ref: '#/components/schemas/FromPrevious'
+        stopKind:
+          $ref: '#/components/schemas/StopKind'
+      required:
+      - type
+      - position
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    ExceededNbGroups:
+      type: object
+      description: The maximum number of groups and its corresponding exceeding number of groups, for a stop tag.
+      properties:
+        maxAllowed:
+          type: integer
+          description: Maximum number of groups allowed.
+          example: 2
+          minimum: 0
+        exceededNbGroups:
+          type: integer
+          description: Number of groups that exceeds the maximum number allowed.
+          example: 2
+          minimum: 1
+      required:
+      - maxAllowed
+      - exceededNbGroups
+    SolutionObjective:
+      type: object
+      properties:
+        name:
+          type: string
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        priority:
+          type: integer
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        direction:
+          $ref: '#/components/schemas/OptimizationDirection'
+        value:
+          type: number
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    VehicleProfileFly:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - fly
+          description: 'Discriminator value: "fly".'
+        kmph:
+          type: number
+          description: The constant speed in kilometers per hour used for crow-fly travel time calculations.
+      required:
+      - type
+      description: A crow-fly (straight-line) mode of transportation, useful for quick testing since it is computed extremely fast.
+    TimeWindow:
+      type: object
+      properties:
+        begin:
+          $ref: '#/components/schemas/DateTime'
+        end:
+          $ref: '#/components/schemas/DateTime'
+      required:
+      - begin
+      - end
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    MaxStopSpanViolation:
+      type: object
+      description: Violation of a order's MaxStopSpan constraint.
+      properties:
+        type:
+          type: string
+          enum:
+          - maxStopSpan
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        orderId:
+          description: The order id with the MaxStopSpan constraint violation.
+          type: string
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        delay:
+          description: The delay that exceeds the MaxStopSpan.
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+      required:
+      - type
+      - orderId
+      - delay
+  parameters:
+    agencyId:
+      name: agencyId
+      description: The agency id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/AgencyId'
+    planId:
+      name: planId
+      description: The plan id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/RegexIdValidation'
+  responses:
+    Unauthorized:
+      description: The caller is not authorized to perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    NotAuthenticated:
+      description: The caller is not authenticated.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    InternalServerError:
+      description: An internal server error has occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+  securitySchemes:
+    otp_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    gdpr_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    access_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    refresh_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    password_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

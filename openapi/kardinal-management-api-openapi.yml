@@ -1,0 +1,441 @@
+openapi: 3.2.0
+info:
+  title: Kardinal ARO Management API
+  version: 2.55.0
+  description: This document specifies the REST API of Kardinal ARO v2.
+  contact:
+    url: https://kardinal.ai/
+    email: contact@kardinal.ai
+servers:
+- url: /api/v2
+security:
+- access_token: []
+tags:
+- name: Management
+paths:
+  /login/refresh:
+    post:
+      summary: Refresh the access token
+      operationId: postLoginRefresh
+      tags:
+      - Management
+      security:
+      - refresh_token: []
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: The old access token.
+              properties:
+                access_token:
+                  $ref: '#/components/schemas/AccessToken'
+      responses:
+        '200':
+          description: The refresh succeeded.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/EnvelopedLoginGDPROutput'
+                - $ref: '#/components/schemas/EnvelopedLoginRefreshOutput'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /agencies/{agencyId}/plans/{planId}/running:
+    parameters:
+    - $ref: '#/components/parameters/agencyId'
+    - $ref: '#/components/parameters/planId'
+    put:
+      summary: Stop or restart the optimization of a plan
+      operationId: putPlanRunning
+      tags:
+      - Management
+      parameters:
+      - $ref: '#/components/parameters/force'
+      requestBody:
+        description: 'A boolean value: false will stop the optimization, true will restart the optimization.'
+        content:
+          application/json:
+            schema:
+              type: boolean
+              example: false
+      responses:
+        '200':
+          description: The request succeeded.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /agencies/{agencyId}/plans/{planId}/state:
+    parameters:
+    - $ref: '#/components/parameters/agencyId'
+    - $ref: '#/components/parameters/planId'
+    get:
+      summary: Fetch the latest state of a plan
+      operationId: fetchLastPlanState
+      tags:
+      - Management
+      responses:
+        '200':
+          description: Latest plan state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopedTimedPlanState'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /agencies/{agencyId}/plans/{planId}/states:
+    parameters:
+    - $ref: '#/components/parameters/agencyId'
+    - $ref: '#/components/parameters/planId'
+    - $ref: '#/components/parameters/limit'
+    get:
+      summary: Fetch the latest states of a plan
+      operationId: fetchLastNPlanStates
+      tags:
+      - Management
+      responses:
+        '200':
+          description: Latest plan states.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopedTimedPlanStates'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /agencies/{agencyId}/plans/{planId}/status:
+    parameters:
+    - $ref: '#/components/parameters/agencyId'
+    - $ref: '#/components/parameters/planId'
+    get:
+      summary: Retrieve a plan status
+      operationId: getPlanStatus
+      tags:
+      - Management
+      responses:
+        '200':
+          description: Plan status response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopedPlanStatus'
+        '401':
+          $ref: '#/components/responses/NotAuthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  parameters:
+    force:
+      name: force
+      description: If true, on an archived item, the requested action will be forced and the item will be unarchived.
+      in: query
+      schema:
+        type: boolean
+        default: false
+    limit:
+      name: limit
+      description: 'The number of items to fetch. The value should be a positive integer
+
+        and if the limit is set to 0, all items will be fetched.
+
+        '
+      in: query
+      required: false
+      schema:
+        type: integer
+        example: 5
+        default: 5
+        minimum: 0
+    agencyId:
+      name: agencyId
+      description: The agency id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/AgencyId'
+    planId:
+      name: planId
+      description: The plan id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/RegexIdValidation'
+  schemas:
+    PlanStatus:
+      type: object
+      readOnly: true
+      properties:
+        planVersionInSolution:
+          description: The plan version taken into account in the current solution.
+          allOf:
+          - $ref: '#/components/schemas/PlanVersion'
+        waitingRoom:
+          description: If the maximum number of simultaneous running plans has already been reached, the plan waits in the waiting room for one of the running plans to finish.
+          allOf:
+          - $ref: '#/components/schemas/PlanStatusVersion'
+        waitingTraffic:
+          description: The plan is waiting for its traffic coefficients to be computed.
+          allOf:
+          - $ref: '#/components/schemas/PlanStatusVersion'
+        creation:
+          description: The plan is being created in order to be optimized.
+          allOf:
+          - $ref: '#/components/schemas/PlanStatusVersion'
+        optimization:
+          description: The plan is being optimized.
+          allOf:
+          - $ref: '#/components/schemas/PlanStatusVersion'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    GDPRToken:
+      type: string
+      description: A JSON Web Token with scope 'gdpr', to be used to approve a GDPR policy, valid for 1 hour.
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...cMp9DA
+    AgencyId:
+      description: The agency id.
+      readOnly: true
+      example: LND_Agency-42
+      allOf:
+      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
+    ErrorProperties:
+      type: object
+      additionalProperties:
+        type: string
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PlanId:
+      description: The plan id.
+      readOnly: true
+      example: plan-AB
+      allOf:
+      - $ref: '#/components/schemas/RegexIdValidation'
+    PlanState:
+      type: string
+      readOnly: true
+      description: "The corresponding plan's state.\n  - waiting: The plan was received and is awaiting processing.\n  - processing: The plan is being processed.\n  - preOptimizing: The plan is being optimized while awaiting traffic or other information.\n  - preOptimized: While still awaiting traffic or other information, one of the following events has occurred:\n      no better solution can be produced, or the optimization period has reached its limit.\n      Note that 'preOptimized' should be followed by 'optimizing' and 'optimized'.\n  - optimizing: The plan is being optimized with all required information.\n  - optimized: This state can be triggered by one of the following events:\n      no better solution can be produced, or the optimization period has reached its limit.\n  - stopped: The plan's awaiting optimizations were canceled.\n  - deleted: The plan was deleted and awaiting optimizations were canceled.\n  - interrupted: The plan was either updated, stopped or deleted during its optimization.\n"
+      enum:
+      - waiting
+      - processing
+      - preOptimizing
+      - preOptimized
+      - optimizing
+      - optimized
+      - stopped
+      - deleted
+      - interrupted
+    AccessToken:
+      type: string
+      description: A JSON Web Token with scope 'access', to be used to access protected data, valid for 1 hour.
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...oLXvDw
+    EnvelopedTimedPlanStates:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimedPlanState'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EnvelopedErrors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RegexPrefixedIdValidation:
+      type: string
+      description: An id beginning with a prefix and an underscore.
+      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
+    PlanVersion:
+      type: integer
+      description: The plan version.
+      readOnly: true
+      minimum: 1
+      example: 42
+    EnvelopedLoginRefreshOutput:
+      type: object
+      description: An object containing the new access token.
+      properties:
+        item:
+          type: object
+          properties:
+            accessToken:
+              $ref: '#/components/schemas/AccessToken'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        access_token:
+          allOf:
+          - deprecated: true
+          - $ref: '#/components/schemas/AccessToken'
+    DateTime:
+      type: string
+      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
+      example: '2019-11-15T12:34:56Z'
+    EnvelopedPlanStatus:
+      type: object
+      properties:
+        item:
+          $ref: '#/components/schemas/PlanStatus'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+        planVersion:
+          $ref: '#/components/schemas/PlanVersion'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PlanStatusVersion:
+      type: object
+      properties:
+        waitingVersion:
+          description: The version currently waiting.
+          allOf:
+          - $ref: '#/components/schemas/PlanVersion'
+        runningVersion:
+          description: The version currently running.
+          allOf:
+          - $ref: '#/components/schemas/PlanVersion'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RegexIdValidation:
+      type: string
+      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
+      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
+    EnvelopedLoginGDPROutput:
+      type: object
+      description: An object containing a 'gdpr' JSON Web Token, returned by a successful login of a user which needs to approve a GDPR policy.
+      properties:
+        item:
+          type: object
+          properties:
+            gdprToken:
+              $ref: '#/components/schemas/GDPRToken'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        access_token:
+          allOf:
+          - deprecated: true
+          - $ref: '#/components/schemas/GDPRToken'
+    Error:
+      type: object
+      readOnly: true
+      properties:
+        code:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        message:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        properties:
+          $ref: '#/components/schemas/ErrorProperties'
+      required:
+      - message
+      - code
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EnvelopedTimedPlanState:
+      type: object
+      properties:
+        item:
+          $ref: '#/components/schemas/TimedPlanState'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    TimedPlanState:
+      type: object
+      readOnly: true
+      properties:
+        planVersion:
+          description: The corresponding plan's version.
+          type: number
+          example: 2
+        timestamp:
+          $ref: '#/components/schemas/DateTime'
+        state:
+          $ref: '#/components/schemas/PlanState'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+  responses:
+    Unauthorized:
+      description: The caller is not authorized to perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    Forbidden:
+      description: The caller is not allowed to perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    BadRequest:
+      description: The server could not understand the request due to invalid content (bad syntax, bad format, bad values, etc).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    NotAuthenticated:
+      description: The caller is not authenticated.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    InternalServerError:
+      description: An internal server error has occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+  securitySchemes:
+    otp_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    gdpr_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    access_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    refresh_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    password_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
