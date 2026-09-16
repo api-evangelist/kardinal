@@ -340,3 +340,5 @@ common:
   url: agentic-access/kardinal-agentic-access.yml
 - type: DomainSecurity
   url: security/kardinal-domain-security.yml
+- type: Contact
+  url: mailto:contact@kardinal.ai
