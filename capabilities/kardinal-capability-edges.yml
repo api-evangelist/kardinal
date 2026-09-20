@@ -11,8 +11,20 @@ capability_model:
   attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
     CC BY 4.0
   notice: NOTICE
-edge_count: 4
+edge_count: 5
 edges:
+- tag: Authenticate
+  spec_file: kardinal-authenticate-api-openapi.yml
+  capability_id: BC-620.20
+  capability_id_l1: BC-620
+  capability_name: Identity & Access Management
+  confidence: 0.85
+  evidence: POST /auth/password/reset  resetPassword; GET /auth/mfa/config  getActorMFAConfig  Fetch the
+    actor's MFA config; GET /login/methods  Retrieve the available login methods
+  reason: Entirely authentication surface — password tokens, MFA/OTP configuration, backup codes, login
+    methods, public key for token verification. This is identity and access management plumbing; mapped
+    only to the IAM capability, which is the honest technical reading.
+  recovered_from: vertical-automotive-mobility-edges.json
 - tag: Core
   spec_file: kardinal-core-api-openapi.yml
   capability_id: BC-2420
