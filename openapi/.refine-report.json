@@ -1,0 +1,37 @@
+{
+  "provider": "kardinal",
+  "sources": [
+    "_original/kardinal-aro-openapi-original.yml"
+  ],
+  "outputs": [
+    "kardinal-authenticate-api-openapi.yml",
+    "kardinal-core-api-openapi.yml",
+    "kardinal-management-api-openapi.yml",
+    "kardinal-order-api-openapi.yml",
+    "kardinal-plan-api-openapi.yml",
+    "kardinal-resource-api-openapi.yml",
+    "kardinal-simpleplan-api-openapi.yml",
+    "kardinal-solution-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "kardinal-aro-openapi-original.yml: upgraded openapi 3.0.3 -> OpenAPI 3.2.0",
+    "kardinal-aro-openapi-original.yml: declared missing tag: Core",
+    "kardinal-aro-openapi-original.yml: declared missing tag: Management",
+    "kardinal-aro-openapi-original.yml: declared missing tag: Solution",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "kardinal-authenticate-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "kardinal-core-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "kardinal-management-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "kardinal-order-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "kardinal-plan-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "kardinal-resource-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "kardinal-simpleplan-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "kardinal-solution-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
+}

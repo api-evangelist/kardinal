@@ -95,18 +95,10 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   schemas:
-    EnvelopedOrder:
-      type: object
-      properties:
-        item:
-          $ref: '#/components/schemas/Order'
-        agencyId:
-          $ref: '#/components/schemas/AgencyId'
-        planId:
-          $ref: '#/components/schemas/PlanId'
-        planVersion:
-          $ref: '#/components/schemas/PlanVersion'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    DateTime:
+      type: string
+      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
+      example: '2019-11-15T12:34:56Z'
     Capacities:
       type: object
       additionalProperties:
@@ -115,6 +107,11 @@ components:
         volume: 9.5
         weight: 2200
         nbPackages: 23
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    Stop:
+      oneOf:
+      - $ref: '#/components/schemas/SingleStop'
+      - $ref: '#/components/schemas/AlternativesStop'
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
     AgencyId:
       description: The agency id.
@@ -127,25 +124,6 @@ components:
       additionalProperties:
         type: string
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    StopKind:
-      type: string
-      enum:
-      - pickup
-      - delivery
-      - acknowledgement
-      default: delivery
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    PlanId:
-      description: The plan id.
-      readOnly: true
-      example: plan-AB
-      allOf:
-      - $ref: '#/components/schemas/RegexIdValidation'
-    Duration:
-      type: string
-      description: A period of time, expressed in the ISO8601 **duration** format.
-      pattern: ^P(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$
-      example: PT4M
     Position:
       type: object
       properties:
@@ -166,18 +144,34 @@ components:
         lon: 2.3269331
         lat: 48.8812658
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    EnvelopedErrors:
-      type: object
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/Error'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RegexIdValidation:
+      type: string
+      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
+      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
     RegexPrefixedIdValidation:
       type: string
       description: An id beginning with a prefix and an underscore.
       pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
+    TaggedTimeWindow:
+      type: object
+      description: TimeWindow with resource tags.
+      properties:
+        begin:
+          $ref: '#/components/schemas/DateTime'
+        end:
+          $ref: '#/components/schemas/DateTime'
+        resourceTags:
+          type: array
+          items:
+            type: string
+            allOf:
+            - $ref: '#/components/schemas/RegexIdValidation'
+          example:
+          - subcontractorA
+          - subcontractorB
+      required:
+      - begin
+      - end
     SingleStop:
       type: object
       properties:
@@ -234,29 +228,63 @@ components:
       - id
       - position
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    PlanVersion:
-      type: integer
-      description: The plan version.
-      readOnly: true
-      minimum: 1
-      example: 42
-    DateTime:
+    StopKind:
       type: string
-      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
-      example: '2019-11-15T12:34:56Z'
-    RegexIdValidation:
-      type: string
-      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
-      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
-    Stop:
-      oneOf:
-      - $ref: '#/components/schemas/SingleStop'
-      - $ref: '#/components/schemas/AlternativesStop'
+      enum:
+      - pickup
+      - delivery
+      - acknowledgement
+      default: delivery
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
     Properties:
       type: object
       additionalProperties:
         type: string
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    AlternativesStop:
+      type: object
+      description: A stop composed of different alternative single stops.
+      properties:
+        id:
+          allOf:
+          - $ref: '#/components/schemas/RegexIdValidation'
+        type:
+          type: string
+          enum:
+          - alternatives
+          description: Discriminator identifying this as an alternatives stop, as opposed to a single stop.
+        alternatives:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/SingleStop'
+          description: The list of single stops among which the algorithm must choose the best one to visit (for example choosing among multiple charging points or waste disposal sites). Using alternatives can increase optimization time.
+      required:
+      - type
+      - alternatives
+    Error:
+      type: object
+      readOnly: true
+      properties:
+        code:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        message:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        properties:
+          $ref: '#/components/schemas/ErrorProperties'
+      required:
+      - message
+      - code
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EnvelopedErrors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
     Order:
       type: object
@@ -301,101 +329,38 @@ components:
       - id
       - stops
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    Error:
+    Duration:
+      type: string
+      description: A period of time, expressed in the ISO8601 **duration** format.
+      pattern: ^P(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$
+      example: PT4M
+    EnvelopedOrder:
       type: object
-      readOnly: true
       properties:
-        code:
-          type: string
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        message:
-          type: string
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        properties:
-          $ref: '#/components/schemas/ErrorProperties'
-      required:
-      - message
-      - code
+        item:
+          $ref: '#/components/schemas/Order'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+        planVersion:
+          $ref: '#/components/schemas/PlanVersion'
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    TaggedTimeWindow:
-      type: object
-      description: TimeWindow with resource tags.
-      properties:
-        begin:
-          $ref: '#/components/schemas/DateTime'
-        end:
-          $ref: '#/components/schemas/DateTime'
-        resourceTags:
-          type: array
-          items:
-            type: string
-            allOf:
-            - $ref: '#/components/schemas/RegexIdValidation'
-          example:
-          - subcontractorA
-          - subcontractorB
-      required:
-      - begin
-      - end
-    AlternativesStop:
-      type: object
-      description: A stop composed of different alternative single stops.
-      properties:
-        id:
-          allOf:
-          - $ref: '#/components/schemas/RegexIdValidation'
-        type:
-          type: string
-          enum:
-          - alternatives
-          description: Discriminator identifying this as an alternatives stop, as opposed to a single stop.
-        alternatives:
-          type: array
-          items:
-            allOf:
-            - $ref: '#/components/schemas/SingleStop'
-          description: The list of single stops among which the algorithm must choose the best one to visit (for example choosing among multiple charging points or waste disposal sites). Using alternatives can increase optimization time.
-      required:
-      - type
-      - alternatives
-  parameters:
-    force:
-      name: force
-      description: If true, on an archived item, the requested action will be forced and the item will be unarchived.
-      in: query
-      schema:
-        type: boolean
-        default: false
-    agencyId:
-      name: agencyId
-      description: The agency id.
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/AgencyId'
-    planId:
-      name: planId
+    PlanVersion:
+      type: integer
+      description: The plan version.
+      readOnly: true
+      minimum: 1
+      example: 42
+    PlanId:
       description: The plan id.
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/RegexIdValidation'
-    orderId:
-      name: orderId
-      description: The order id.
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/RegexIdValidation'
+      readOnly: true
+      example: plan-AB
+      allOf:
+      - $ref: '#/components/schemas/RegexIdValidation'
   responses:
     Unauthorized:
       description: The caller is not authorized to perform this action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnvelopedErrors'
-    NotFound:
-      description: The specified resource was not found.
       content:
         application/json:
           schema:
@@ -412,12 +377,47 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/EnvelopedErrors'
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
     InternalServerError:
       description: An internal server error has occurred.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/EnvelopedErrors'
+  parameters:
+    force:
+      name: force
+      description: If true, on an archived item, the requested action will be forced and the item will be unarchived.
+      in: query
+      schema:
+        type: boolean
+        default: false
+    orderId:
+      name: orderId
+      description: The order id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/RegexIdValidation'
+    agencyId:
+      name: agencyId
+      description: The agency id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/AgencyId'
+    planId:
+      name: planId
+      description: The plan id.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/RegexIdValidation'
   securitySchemes:
     otp_token:
       type: http
