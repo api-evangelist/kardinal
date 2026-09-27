@@ -64,6 +64,7 @@ tags:
 - Transportation
 - Fleet Management
 - Optimization
+- A2A
 tags_raw:
 - Company
 - SaaS
@@ -75,6 +76,7 @@ tags_raw:
 - Transportation
 - Fleet Management
 - Optimization
+- A2A
 apis:
 - aid: kardinal:kardinal-authenticate-api
   name: Kardinal Authenticate API
@@ -342,3 +344,10 @@ common:
   url: security/kardinal-domain-security.yml
 - type: Contact
   url: mailto:contact@kardinal.ai
+x-a2a:
+  verified: true
+  probed: '2026-09-26'
+  url: "https://developers.kardinal.ai/.well-known/agent-card.json"
+  grade: "conformant"
+  protocol_version: "0.3"
+  control: 404
