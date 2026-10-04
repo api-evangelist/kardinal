@@ -482,66 +482,58 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   schemas:
-    MFAConfigValidationEmail:
+    OTPToken:
+      type: string
+      description: A JSON Web Token with scope 'otp', to be used with an OTP (One-Time Password) value, valid for 10 minutes.
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...QwOJAQ
+    LoginOTPInput:
       type: object
-      description: A validation of the update of the OTP type "email" in the user's MFA configuration.
+      description: Provides the OTP code to fulfill the login.
+      properties:
+        otp:
+          $ref: '#/components/schemas/OTPValue'
+      required:
+      - otp
+    ObfuscatedEmail:
+      type:
+      - string
+      - 'null'
+      description: An obfuscated representation of the email used for MFA.
+      example: em***********.com
+    UserStatus:
+      type: string
+      description: The user's status.
+      enum:
+      - enabled
+      - disabled
+      - pending
+      example: pending
+      readOnly: true
+    EnvelopedAuthenticationMethods:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthenticationMethods'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    MFAConfigRequestSMS:
+      type: object
+      description: A request to update or disable the OTP type "sms" in the user's MFA configuration.
       properties:
         otpType:
           type: string
           enum:
-          - email
+          - sms
           description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        email:
-          $ref: '#/components/schemas/Email'
-        otp:
-          $ref: '#/components/schemas/OTPValue'
+        phoneNumber:
+          $ref: '#/components/schemas/PhoneNumber'
+        password:
+          $ref: '#/components/schemas/Password'
       required:
       - otpType
-      - email
-      - otp
-    Username:
-      type: string
-      description: The username is used for login, it is unique for each user, it can be either an email (for clients) or a regular username (for Kardinal's internal users).
-      example: martin.dupont@kardinal.ai
-      oneOf:
-      - $ref: '#/components/schemas/RegexNotEmpty'
-      - $ref: '#/components/schemas/Email'
-    EnvelopedBackupCodes:
-      type: object
-      properties:
-        items:
-          $ref: '#/components/schemas/BackupCodes'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    EnvelopedMFARequestTOTPOutput:
-      type: object
-      description: A JWT token with scope 'otp' valid for 10 minutes, together with a TOTP config.
-      properties:
-        item:
-          type: object
-          properties:
-            otpToken:
-              $ref: '#/components/schemas/OTPToken'
-            totpConfig:
-              $ref: '#/components/schemas/TOTPConfig'
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    EnvelopedLoginOTPOutput:
-      type: object
-      properties:
-        item:
-          $ref: '#/components/schemas/LoginOTPOutput'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    Login:
-      type: object
-      description: The payload to use for login.
-      properties:
-        username:
-          $ref: '#/components/schemas/Username'
-        password:
-          description: The user's password.
-          allOf:
-          - $ref: '#/components/schemas/Password'
-      required:
-      - username
+      - phoneNumber
       - password
     Level:
       type: string
@@ -556,30 +548,17 @@ components:
       - agency
       default: agency
       example: country
-    MFAConfigResendEmail:
-      type: object
-      description: A request to resend the OTP code for the OTP type "email" during the user's MFA configuration.
-      properties:
-        otpType:
-          type: string
-          enum:
-          - email
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        email:
-          $ref: '#/components/schemas/Email'
-      required:
-      - otpType
-      - email
-    EnvelopedMFAConfig:
-      type: object
-      properties:
-        item:
-          $ref: '#/components/schemas/MFAConfig'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    RegexPrefixedIdValidation:
+    PhoneNumber:
       type: string
-      description: An id beginning with a prefix and an underscore.
-      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
+      description: Phone number in E.164 international format (e.g., +33612345678).
+      pattern: ^\+[1-9]\d{1,14}$
+      example: '+33612345678'
+    AgencyId:
+      description: The agency id.
+      readOnly: true
+      example: LND_Agency-42
+      allOf:
+      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
     AuthenticationMethods:
       type: array
       items:
@@ -594,45 +573,60 @@ components:
         authUrl: /api/v2/login/sso/azure
       - provider: kardinal
         authUrl: /api/v2/login
-    MFAConfigValidationSMS:
+    PasswordRequest:
       type: object
-      description: A validation of the update of the OTP type "sms" in the user's MFA configuration.
+      description: An object containing a new password and a confirmation of the new password.
       properties:
-        otpType:
-          type: string
-          enum:
-          - sms
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        phoneNumber:
-          $ref: '#/components/schemas/PhoneNumber'
-        otp:
-          $ref: '#/components/schemas/OTPValue'
-      required:
-      - otpType
-      - phoneNumber
-      - otp
-    RegionIds:
+        password:
+          description: A new password.
+          allOf:
+          - $ref: '#/components/schemas/Password'
+        confirmPassword:
+          description: The confirmation of the new password.
+          allOf:
+          - $ref: '#/components/schemas/Password'
+    AgencyIds:
       type: array
-      description: A list of region identifiers.
+      description: A list of agency identifiers.
       items:
-        $ref: '#/components/schemas/RegionId'
+        $ref: '#/components/schemas/AgencyId'
       example:
-      - LND_Ile-de-France
-      - LND_Grand-Ouest
-    EnvelopedLoginMFAOutput:
+      - LND_Agency-01
+      - LND_Agency-42
+    Password:
+      type: string
+      format: password
+      description: "A user password must contain at least:\n- 1 number,\n- 1 uppercase letter,\n- 1 lowercase letter,\n- 1 special character amongst the following:\n  !\"#$%&'()*+,-./:;<=>?@[]^_`{|}~\n- 12 characters.\nAnd it must not exceed 72 bytes.\n"
+      allOf:
+      - type: string
+        pattern: .*[0-9]{1}
+      - type: string
+        pattern: .*[A-Z]{1}
+      - type: string
+        pattern: .*[a-z]{1}
+      - type: string
+        pattern: .*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{1}
+      - type: string
+        pattern: ^.{12,72}$
+    Username:
+      type: string
+      description: The username is used for login, it is unique for each user, it can be either an email (for clients) or a regular username (for Kardinal's internal users).
+      example: martin.dupont@kardinal.ai
+      oneOf:
+      - $ref: '#/components/schemas/RegexNotEmpty'
+      - $ref: '#/components/schemas/Email'
+    EnvelopedOTPType:
       type: object
-      description: An object containing a 'mfa' JSON Web Token, returned by a successful login of a user which needs to setup MFA authentication.
       properties:
         item:
-          type: object
-          properties:
-            mfaToken:
-              $ref: '#/components/schemas/MFAToken'
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        access_token:
-          allOf:
-          - deprecated: true
-          - $ref: '#/components/schemas/MFAToken'
+          $ref: '#/components/schemas/OTPType'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    BackupCode:
+      type: string
+      description: A unique 16-characters backup code.
+      maxLength: 16
+      minLength: 16
+      example: E0ZE97NY1Z6WAW1L
     MFAConfigValidationTOTP:
       type: object
       description: A validation of the update of the OTP type "totp" in the user's MFA configuration.
@@ -647,33 +641,90 @@ components:
       required:
       - otpType
       - otp
-    ObfuscatedEmail:
-      type:
-      - string
-      - 'null'
-      description: An obfuscated representation of the email used for MFA.
-      example: em***********.com
-    EnvelopedAuthenticationMethods:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/AuthenticationMethods'
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    AgencyId:
-      description: The agency id.
-      readOnly: true
-      example: LND_Agency-42
+    ClientId:
+      description: The client id.
+      example: LND_FR
       allOf:
       - $ref: '#/components/schemas/RegexPrefixedIdValidation'
-    TokenRequest:
+    AccessToken:
+      type: string
+      description: A JSON Web Token with scope 'access', to be used to access protected data, valid for 1 hour.
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...oLXvDw
+    MFAToken:
+      type: string
+      description: A JSON Web Token with scope 'mfa', to be used to setup MFA authentication, valid for 1 hour.
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...3VysDg
+    PublicKeyPEM:
+      type: string
+      description: A public key in the Privacy-Enhanced Mail format.
+      externalDocs:
+        url: https://en.wikipedia.org/wiki/Privacy-Enhanced_Mail
+      example: '-----BEGIN PUBLIC KEY-----
+
+        MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAETOl+t2xT1p21AXF+cvd35uKRDOeXejEJ
+
+        3KTMc+vVD+wEs4TSVGYt2OlICe7dTRtbtUGr/xN9xZsolH3DeFVWXjd0IJ1ZNzC+
+
+        hippE8XApU7phY/KVKEbrrW8fg72uJiP
+
+        -----END PUBLIC KEY-----
+
+        '
+    EnvelopedMFARequestTOTPOutput:
       type: object
-      description: An object containing a password token.
+      description: A JWT token with scope 'otp' valid for 10 minutes, together with a TOTP config.
       properties:
-        token:
-          $ref: '#/components/schemas/PasswordToken'
+        item:
+          type: object
+          properties:
+            otpToken:
+              $ref: '#/components/schemas/OTPToken'
+            totpConfig:
+              $ref: '#/components/schemas/TOTPConfig'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    MFAConfigRegenerateBackupCodes:
+      type: object
+      description: A request to regenerate the MFA's backup codes.
+      properties:
+        password:
+          $ref: '#/components/schemas/Password'
+      required:
+      - password
+    EnvelopedMFARequestOTPOutput:
+      type: object
+      description: A JWT token with scope 'otp' valid for 10 minutes.
+      properties:
+        item:
+          type: object
+          properties:
+            otpToken:
+              $ref: '#/components/schemas/OTPToken'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    MFAConfigRequestEmail:
+      type: object
+      description: A request to update or disable the OTP type "email" in the user's MFA configuration.
+      properties:
+        otpType:
+          type: string
+          enum:
+          - email
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        email:
+          $ref: '#/components/schemas/Email'
+        password:
+          $ref: '#/components/schemas/Password'
+      required:
+      - otpType
+      - email
+      - password
+    RegionIds:
+      type: array
+      description: A list of region identifiers.
+      items:
+        $ref: '#/components/schemas/RegionId'
+      example:
+      - LND_Ile-de-France
+      - LND_Grand-Ouest
     LoginOTPOutput:
       type: object
       properties:
@@ -698,16 +749,25 @@ components:
         phoneNumber:
           $ref: '#/components/schemas/ObfuscatedPhoneNumber'
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    OTPType:
+    GoogleSSOLogin:
+      type: object
+      description: The payload to use for login through Google SSO.
+      properties:
+        accessToken:
+          type: string
+          example: ya28.a0AfB_byCbEgO5rOeu73KBdAv0ZeiEFz7xzgxtdCzailCy9ew6BCgKUaiheRxDJ1Do8HbiXVxMcm5jyo_5fV_yAtYKhSLKayMvGH0n00E-NtOgtH5myIhpc7heq5zZ788XSzoHxJ9aSWR_y1Vr7-zWiRWe_YANqnmEo6FaaCgYKAckERASSFQHGX2MilpI4NsOBgWYkOo1zKgJPmg0171
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+      required:
+      - accessToken
+    Email:
       type: string
-      enum:
-      - none
-      - email
-      - sms
-      - totp
-      default: none
-      example: sms
-      description: Type of OTP (One-Time Password).
+      description: A valid email address.
+      format: email
+      example: martin.dupont@kardinal.ai
+    PasswordToken:
+      type: string
+      description: A JSON Web Token with scope 'password', to be used to set or reset one's password, valid for 24 hours (for creation) or 10 minutes (for reset).
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...claTBQ
     AzureSSOLogin:
       type: object
       description: The payload to use for login through Azure SSO.
@@ -723,24 +783,135 @@ components:
       required:
       - accessToken
       - idToken
-    GDPRToken:
+    Error:
+      type: object
+      readOnly: true
+      properties:
+        code:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        message:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        properties:
+          $ref: '#/components/schemas/ErrorProperties'
+      required:
+      - message
+      - code
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    TOTPConfig:
+      type:
+      - object
+      - 'null'
+      properties:
+        secret:
+          type: string
+          example: J5GEMOCTHFLDER22JU3DIRKDJJMEOOJZ
+          description: A 32-characters secret code.
+        url:
+          type: string
+          example: otpauth://totp/Kardinal:foobar?algorithm=SHA1&digits=6&issuer=Kardinal&period=30&secret=J5GE...OJZ
+          description: The TOTP auth protocol url.
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    OTPType:
       type: string
-      description: A JSON Web Token with scope 'gdpr', to be used to approve a GDPR policy, valid for 1 hour.
-      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...cMp9DA
+      enum:
+      - none
+      - email
+      - sms
+      - totp
+      default: none
+      example: sms
+      description: Type of OTP (One-Time Password).
     UsernameRequest:
       type: object
       description: An object containing a username.
       properties:
         username:
           $ref: '#/components/schemas/Username'
-    MFAToken:
+    MFAConfig:
+      type: object
+      properties:
+        updatedAt:
+          description: The config's last update date.
+          readOnly: true
+          allOf:
+          - $ref: '#/components/schemas/DateTime'
+        preferredType:
+          $ref: '#/components/schemas/OTPType'
+        availableTypes:
+          description: The list of OTP types which have been configured by the actor in his MFA configuration.
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/OTPType'
+          example:
+          - email
+          - sms
+          - totp
+        email:
+          $ref: '#/components/schemas/ObfuscatedEmail'
+        phoneNumber:
+          $ref: '#/components/schemas/ObfuscatedPhoneNumber'
+        totpConfig:
+          readOnly: true
+          allOf:
+          - $ref: '#/components/schemas/TOTPConfig'
+        backupCodes:
+          readOnly: true
+          allOf:
+          - $ref: '#/components/schemas/BackupCodes'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    GDPRToken:
       type: string
-      description: A JSON Web Token with scope 'mfa', to be used to setup MFA authentication, valid for 1 hour.
-      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...3VysDg
-    RefreshToken:
+      description: A JSON Web Token with scope 'gdpr', to be used to approve a GDPR policy, valid for 1 hour.
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...cMp9DA
+    TokenRequest:
+      type: object
+      description: An object containing a password token.
+      properties:
+        token:
+          $ref: '#/components/schemas/PasswordToken'
+    AuthenticationMethod:
+      type: object
+      description: An authentication method to be used for login.
+      properties:
+        provider:
+          type: string
+          description: The name of the authentication provider.
+        properties:
+          type: object
+          description: Additional properties needed by the authentication method.
+        authUrl:
+          type: string
+          description: The absolute path of the login endpoint to use.
+      required:
+      - provider
+      - authUrl
+    EnvelopedLoginOTPOutput:
+      type: object
+      properties:
+        item:
+          $ref: '#/components/schemas/LoginOTPOutput'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RegexNotEmpty:
       type: string
-      description: A JSON Web Token with scope 'refresh', to be used to refresh the access token, valid for 30 days.
-      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...Ir-9Bg
+      description: Not empty string.
+      pattern: .+
+    MFAConfigResendSMS:
+      type: object
+      description: A request to resend the OTP code for the OTP type "sms" during the user's MFA configuration.
+      properties:
+        otpType:
+          type: string
+          enum:
+          - sms
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        phoneNumber:
+          $ref: '#/components/schemas/PhoneNumber'
+      required:
+      - otpType
+      - phoneNumber
     MFAConfigRequestTOTP:
       type: object
       description: A request to update or disable the OTP type "totp" in the user's MFA configuration.
@@ -755,6 +926,92 @@ components:
       required:
       - otpType
       - password
+    EnvelopedLoginGDPROutput:
+      type: object
+      description: An object containing a 'gdpr' JSON Web Token, returned by a successful login of a user which needs to approve a GDPR policy.
+      properties:
+        item:
+          type: object
+          properties:
+            gdprToken:
+              $ref: '#/components/schemas/GDPRToken'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        access_token:
+          allOf:
+          - deprecated: true
+          - $ref: '#/components/schemas/GDPRToken'
+    MFAConfigValidationSMS:
+      type: object
+      description: A validation of the update of the OTP type "sms" in the user's MFA configuration.
+      properties:
+        otpType:
+          type: string
+          enum:
+          - sms
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        phoneNumber:
+          $ref: '#/components/schemas/PhoneNumber'
+        otp:
+          $ref: '#/components/schemas/OTPValue'
+      required:
+      - otpType
+      - phoneNumber
+      - otp
+    UserType:
+      type: string
+      description: The user type.
+      enum:
+      - standard
+      - api
+      - simpleApi
+      - mobile
+      default: standard
+      example: standard
+    RefreshToken:
+      type: string
+      description: A JSON Web Token with scope 'refresh', to be used to refresh the access token, valid for 30 days.
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...Ir-9Bg
+    RegionId:
+      description: The region id.
+      readOnly: true
+      example: LND_Ile-de-France
+      allOf:
+      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
+    Role:
+      type: string
+      description: The user's role.
+      enum:
+      - analyst
+      - expert
+      - super
+      default: analyst
+      example: expert
+    EnvelopedLoginAccessOutput:
+      type: object
+      description: An object containing the access and refresh JSON Web Tokens and the user description, returned by a successful login.
+      properties:
+        item:
+          type: object
+          properties:
+            accessToken:
+              $ref: '#/components/schemas/AccessToken'
+            refreshToken:
+              $ref: '#/components/schemas/RefreshToken'
+            user:
+              $ref: '#/components/schemas/User'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        access_token:
+          allOf:
+          - deprecated: true
+          - $ref: '#/components/schemas/AccessToken'
+        refresh_token:
+          allOf:
+          - deprecated: true
+          - $ref: '#/components/schemas/RefreshToken'
+        user:
+          allOf:
+          - deprecated: true
+          - $ref: '#/components/schemas/User'
     CountryIds:
       type: array
       description: A list of country identifiers.
@@ -763,19 +1020,70 @@ components:
       example:
       - LND_France
       - LND_Belgique
-    PublicKeyJWK:
+    MFAConfigResendEmail:
       type: object
-      description: A public key in the JSON Web Key format.
-      externalDocs:
-        url: https://tools.ietf.org/html/rfc7517
+      description: A request to resend the OTP code for the OTP type "email" during the user's MFA configuration.
+      properties:
+        otpType:
+          type: string
+          enum:
+          - email
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        email:
+          $ref: '#/components/schemas/Email'
+      required:
+      - otpType
+      - email
+    EnvelopedBackupCodes:
+      type: object
+      properties:
+        items:
+          $ref: '#/components/schemas/BackupCodes'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    BackupCodes:
+      type: array
+      description: A list of 10 unique 16-characters backup codes.
+      maxItems: 10
+      minItems: 10
+      items:
+        $ref: '#/components/schemas/BackupCode'
       example:
-        alg: ES384
-        crv: P-384
-        kid: ES384-key
-        kty: EC
-        use: sig
-        x: TOl-t2xT1p21AXF-cvd35uKRDOeXejEJ3KTMc-vVD-wEs4TSVGYt2OlICe7dTRtb
-        y: tUGr_xN9xZsolH3DeFVWXjd0IJ1ZNzC-hippE8XApU7phY_KVKEbrrW8fg72uJiP
+      - E0ZE97NY1Z6WAW1L
+      - 064M3TCQTR5B2Q74
+      - 6BMR618ZH8CJ1WM5
+      - 8ERR9CPIUL6FWB95
+      - I8I09DQL5KHRS06A
+      - NEGSE5TJGXCV2Z2G
+      - 3XHWOE9DXL1YLKW1
+      - VKWE0RN8RO3WXSMR
+      - VV7U19AF4X1NSE83
+      - V5DT0YG81DRXISEY
+    LoginBackupCodeInput:
+      type: object
+      description: Provides a backup code to fulfill the login.
+      properties:
+        backupCode:
+          $ref: '#/components/schemas/BackupCode'
+      required:
+      - backupCode
+    OTPValue:
+      type: string
+      description: A 6-digits OTP code.
+      example: '403852'
+    EnvelopedLoginMFAOutput:
+      type: object
+      description: An object containing a 'mfa' JSON Web Token, returned by a successful login of a user which needs to setup MFA authentication.
+      properties:
+        item:
+          type: object
+          properties:
+            mfaToken:
+              $ref: '#/components/schemas/MFAToken'
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        access_token:
+          allOf:
+          - deprecated: true
+          - $ref: '#/components/schemas/MFAToken'
     User:
       type: object
       description: A user is a person who can use Platform's services.
@@ -873,11 +1181,80 @@ components:
             $ref: '#/components/schemas/ClientId'
       required:
       - username
+    RegexPrefixedIdValidation:
+      type: string
+      description: An id beginning with a prefix and an underscore.
+      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
+    Login:
+      type: object
+      description: The payload to use for login.
+      properties:
+        username:
+          $ref: '#/components/schemas/Username'
+        password:
+          description: The user's password.
+          allOf:
+          - $ref: '#/components/schemas/Password'
+      required:
+      - username
+      - password
+    ObfuscatedPhoneNumber:
+      type:
+      - string
+      - 'null'
+      description: An obfuscated representation of the phone number used for MFA
+      example: +336*******8
+    DateTime:
+      type: string
+      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
+      example: '2019-11-15T12:34:56Z'
     ErrorProperties:
       type: object
       additionalProperties:
         type: string
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    CountryId:
+      description: The country id.
+      readOnly: true
+      example: LND_France
+      allOf:
+      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
+    EnvelopedMFAConfig:
+      type: object
+      properties:
+        item:
+          $ref: '#/components/schemas/MFAConfig'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PublicKeyJWK:
+      type: object
+      description: A public key in the JSON Web Key format.
+      externalDocs:
+        url: https://tools.ietf.org/html/rfc7517
+      example:
+        alg: ES384
+        crv: P-384
+        kid: ES384-key
+        kty: EC
+        use: sig
+        x: TOl-t2xT1p21AXF-cvd35uKRDOeXejEJ3KTMc-vVD-wEs4TSVGYt2OlICe7dTRtb
+        y: tUGr_xN9xZsolH3DeFVWXjd0IJ1ZNzC-hippE8XApU7phY_KVKEbrrW8fg72uJiP
+    MFAConfigValidationEmail:
+      type: object
+      description: A validation of the update of the OTP type "email" in the user's MFA configuration.
+      properties:
+        otpType:
+          type: string
+          enum:
+          - email
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        email:
+          $ref: '#/components/schemas/Email'
+        otp:
+          $ref: '#/components/schemas/OTPValue'
+      required:
+      - otpType
+      - email
+      - otp
     EnvelopedErrors:
       type: object
       properties:
@@ -886,206 +1263,6 @@ components:
           items:
             $ref: '#/components/schemas/Error'
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    OTPValue:
-      type: string
-      description: A 6-digits OTP code.
-      example: '403852'
-    LoginOTPInput:
-      type: object
-      description: Provides the OTP code to fulfill the login.
-      properties:
-        otp:
-          $ref: '#/components/schemas/OTPValue'
-      required:
-      - otp
-    AuthenticationMethod:
-      type: object
-      description: An authentication method to be used for login.
-      properties:
-        provider:
-          type: string
-          description: The name of the authentication provider.
-        properties:
-          type: object
-          description: Additional properties needed by the authentication method.
-        authUrl:
-          type: string
-          description: The absolute path of the login endpoint to use.
-      required:
-      - provider
-      - authUrl
-    PhoneNumber:
-      type: string
-      description: Phone number in E.164 international format (e.g., +33612345678).
-      pattern: ^\+[1-9]\d{1,14}$
-      example: '+33612345678'
-    AccessToken:
-      type: string
-      description: A JSON Web Token with scope 'access', to be used to access protected data, valid for 1 hour.
-      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...oLXvDw
-    UserType:
-      type: string
-      description: The user type.
-      enum:
-      - standard
-      - api
-      - simpleApi
-      - mobile
-      default: standard
-      example: standard
-    DateTime:
-      type: string
-      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
-      example: '2019-11-15T12:34:56Z'
-    ObfuscatedPhoneNumber:
-      type:
-      - string
-      - 'null'
-      description: An obfuscated representation of the phone number used for MFA
-      example: +336*******8
-    Email:
-      type: string
-      description: A valid email address.
-      format: email
-      example: martin.dupont@kardinal.ai
-    UserStatus:
-      type: string
-      description: The user's status.
-      enum:
-      - enabled
-      - disabled
-      - pending
-      example: pending
-      readOnly: true
-    BackupCode:
-      type: string
-      description: A unique 16-characters backup code.
-      maxLength: 16
-      minLength: 16
-      example: E0ZE97NY1Z6WAW1L
-    EnvelopedOTPType:
-      type: object
-      properties:
-        item:
-          $ref: '#/components/schemas/OTPType'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    TOTPConfig:
-      type:
-      - object
-      - 'null'
-      properties:
-        secret:
-          type: string
-          example: J5GEMOCTHFLDER22JU3DIRKDJJMEOOJZ
-          description: A 32-characters secret code.
-        url:
-          type: string
-          example: otpauth://totp/Kardinal:foobar?algorithm=SHA1&digits=6&issuer=Kardinal&period=30&secret=J5GE...OJZ
-          description: The TOTP auth protocol url.
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    OTPToken:
-      type: string
-      description: A JSON Web Token with scope 'otp', to be used with an OTP (One-Time Password) value, valid for 10 minutes.
-      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...QwOJAQ
-    RegionId:
-      description: The region id.
-      readOnly: true
-      example: LND_Ile-de-France
-      allOf:
-      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
-    MFAConfigRegenerateBackupCodes:
-      type: object
-      description: A request to regenerate the MFA's backup codes.
-      properties:
-        password:
-          $ref: '#/components/schemas/Password'
-      required:
-      - password
-    PasswordRequest:
-      type: object
-      description: An object containing a new password and a confirmation of the new password.
-      properties:
-        password:
-          description: A new password.
-          allOf:
-          - $ref: '#/components/schemas/Password'
-        confirmPassword:
-          description: The confirmation of the new password.
-          allOf:
-          - $ref: '#/components/schemas/Password'
-    Error:
-      type: object
-      readOnly: true
-      properties:
-        code:
-          type: string
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        message:
-          type: string
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        properties:
-          $ref: '#/components/schemas/ErrorProperties'
-      required:
-      - message
-      - code
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    AgencyIds:
-      type: array
-      description: A list of agency identifiers.
-      items:
-        $ref: '#/components/schemas/AgencyId'
-      example:
-      - LND_Agency-01
-      - LND_Agency-42
-    BackupCodes:
-      type: array
-      description: A list of 10 unique 16-characters backup codes.
-      maxItems: 10
-      minItems: 10
-      items:
-        $ref: '#/components/schemas/BackupCode'
-      example:
-      - E0ZE97NY1Z6WAW1L
-      - 064M3TCQTR5B2Q74
-      - 6BMR618ZH8CJ1WM5
-      - 8ERR9CPIUL6FWB95
-      - I8I09DQL5KHRS06A
-      - NEGSE5TJGXCV2Z2G
-      - 3XHWOE9DXL1YLKW1
-      - VKWE0RN8RO3WXSMR
-      - VV7U19AF4X1NSE83
-      - V5DT0YG81DRXISEY
-    LoginBackupCodeInput:
-      type: object
-      description: Provides a backup code to fulfill the login.
-      properties:
-        backupCode:
-          $ref: '#/components/schemas/BackupCode'
-      required:
-      - backupCode
-    EnvelopedMFARequestOTPOutput:
-      type: object
-      description: A JWT token with scope 'otp' valid for 10 minutes.
-      properties:
-        item:
-          type: object
-          properties:
-            otpToken:
-              $ref: '#/components/schemas/OTPToken'
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    RegexNotEmpty:
-      type: string
-      description: Not empty string.
-      pattern: .+
-    Role:
-      type: string
-      description: The user's role.
-      enum:
-      - analyst
-      - expert
-      - super
-      default: analyst
-      example: expert
     EnvelopedLoginRefreshOutput:
       type: object
       description: An object containing the new access token.
@@ -1100,190 +1277,7 @@ components:
           allOf:
           - deprecated: true
           - $ref: '#/components/schemas/AccessToken'
-    Password:
-      type: string
-      format: password
-      description: "A user password must contain at least:\n- 1 number,\n- 1 uppercase letter,\n- 1 lowercase letter,\n- 1 special character amongst the following:\n  !\"#$%&'()*+,-./:;<=>?@[]^_`{|}~\n- 12 characters.\nAnd it must not exceed 72 bytes.\n"
-      allOf:
-      - type: string
-        pattern: .*[0-9]{1}
-      - type: string
-        pattern: .*[A-Z]{1}
-      - type: string
-        pattern: .*[a-z]{1}
-      - type: string
-        pattern: .*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{1}
-      - type: string
-        pattern: ^.{12,72}$
-    CountryId:
-      description: The country id.
-      readOnly: true
-      example: LND_France
-      allOf:
-      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
-    MFAConfigRequestSMS:
-      type: object
-      description: A request to update or disable the OTP type "sms" in the user's MFA configuration.
-      properties:
-        otpType:
-          type: string
-          enum:
-          - sms
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        phoneNumber:
-          $ref: '#/components/schemas/PhoneNumber'
-        password:
-          $ref: '#/components/schemas/Password'
-      required:
-      - otpType
-      - phoneNumber
-      - password
-    PasswordToken:
-      type: string
-      description: A JSON Web Token with scope 'password', to be used to set or reset one's password, valid for 24 hours (for creation) or 10 minutes (for reset).
-      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...claTBQ
-    ClientId:
-      description: The client id.
-      example: LND_FR
-      allOf:
-      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
-    EnvelopedLoginAccessOutput:
-      type: object
-      description: An object containing the access and refresh JSON Web Tokens and the user description, returned by a successful login.
-      properties:
-        item:
-          type: object
-          properties:
-            accessToken:
-              $ref: '#/components/schemas/AccessToken'
-            refreshToken:
-              $ref: '#/components/schemas/RefreshToken'
-            user:
-              $ref: '#/components/schemas/User'
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        access_token:
-          allOf:
-          - deprecated: true
-          - $ref: '#/components/schemas/AccessToken'
-        refresh_token:
-          allOf:
-          - deprecated: true
-          - $ref: '#/components/schemas/RefreshToken'
-        user:
-          allOf:
-          - deprecated: true
-          - $ref: '#/components/schemas/User'
-    PublicKeyPEM:
-      type: string
-      description: A public key in the Privacy-Enhanced Mail format.
-      externalDocs:
-        url: https://en.wikipedia.org/wiki/Privacy-Enhanced_Mail
-      example: '-----BEGIN PUBLIC KEY-----
-
-        MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAETOl+t2xT1p21AXF+cvd35uKRDOeXejEJ
-
-        3KTMc+vVD+wEs4TSVGYt2OlICe7dTRtbtUGr/xN9xZsolH3DeFVWXjd0IJ1ZNzC+
-
-        hippE8XApU7phY/KVKEbrrW8fg72uJiP
-
-        -----END PUBLIC KEY-----
-
-        '
-    MFAConfig:
-      type: object
-      properties:
-        updatedAt:
-          description: The config's last update date.
-          readOnly: true
-          allOf:
-          - $ref: '#/components/schemas/DateTime'
-        preferredType:
-          $ref: '#/components/schemas/OTPType'
-        availableTypes:
-          description: The list of OTP types which have been configured by the actor in his MFA configuration.
-          type: array
-          readOnly: true
-          items:
-            $ref: '#/components/schemas/OTPType'
-          example:
-          - email
-          - sms
-          - totp
-        email:
-          $ref: '#/components/schemas/ObfuscatedEmail'
-        phoneNumber:
-          $ref: '#/components/schemas/ObfuscatedPhoneNumber'
-        totpConfig:
-          readOnly: true
-          allOf:
-          - $ref: '#/components/schemas/TOTPConfig'
-        backupCodes:
-          readOnly: true
-          allOf:
-          - $ref: '#/components/schemas/BackupCodes'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    MFAConfigResendSMS:
-      type: object
-      description: A request to resend the OTP code for the OTP type "sms" during the user's MFA configuration.
-      properties:
-        otpType:
-          type: string
-          enum:
-          - sms
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        phoneNumber:
-          $ref: '#/components/schemas/PhoneNumber'
-      required:
-      - otpType
-      - phoneNumber
-    MFAConfigRequestEmail:
-      type: object
-      description: A request to update or disable the OTP type "email" in the user's MFA configuration.
-      properties:
-        otpType:
-          type: string
-          enum:
-          - email
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        email:
-          $ref: '#/components/schemas/Email'
-        password:
-          $ref: '#/components/schemas/Password'
-      required:
-      - otpType
-      - email
-      - password
-    GoogleSSOLogin:
-      type: object
-      description: The payload to use for login through Google SSO.
-      properties:
-        accessToken:
-          type: string
-          example: ya28.a0AfB_byCbEgO5rOeu73KBdAv0ZeiEFz7xzgxtdCzailCy9ew6BCgKUaiheRxDJ1Do8HbiXVxMcm5jyo_5fV_yAtYKhSLKayMvGH0n00E-NtOgtH5myIhpc7heq5zZ788XSzoHxJ9aSWR_y1Vr7-zWiRWe_YANqnmEo6FaaCgYKAckERASSFQHGX2MilpI4NsOBgWYkOo1zKgJPmg0171
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-      required:
-      - accessToken
-    EnvelopedLoginGDPROutput:
-      type: object
-      description: An object containing a 'gdpr' JSON Web Token, returned by a successful login of a user which needs to approve a GDPR policy.
-      properties:
-        item:
-          type: object
-          properties:
-            gdprToken:
-              $ref: '#/components/schemas/GDPRToken'
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        access_token:
-          allOf:
-          - deprecated: true
-          - $ref: '#/components/schemas/GDPRToken'
   responses:
-    Forbidden:
-      description: The caller is not allowed to perform this action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnvelopedErrors'
     InternalServerError:
       description: An internal server error has occurred.
       content:
@@ -1296,6 +1290,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/EnvelopedErrors'
+    Forbidden:
+      description: The caller is not allowed to perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
     NotAuthenticated:
       description: The caller is not authenticated.
       content:
@@ -1303,13 +1303,6 @@ components:
           schema:
             $ref: '#/components/schemas/EnvelopedErrors'
   parameters:
-    username:
-      name: username
-      description: The username.
-      in: query
-      required: false
-      schema:
-        $ref: '#/components/schemas/Username'
     originHeader:
       name: originHeader
       description: 'The origin of the request.
@@ -1323,6 +1316,13 @@ components:
       schema:
         type: string
         format: uri
+    username:
+      name: username
+      description: The username.
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/Username'
   securitySchemes:
     otp_token:
       type: http

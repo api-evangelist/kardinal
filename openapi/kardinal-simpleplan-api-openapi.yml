@@ -47,57 +47,26 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   schemas:
-    TravelDurationSlidingBreak:
-      type: object
-      description: Limitation rule on max travel duration without any break.
-      properties:
-        type:
-          type: string
-          enum:
-          - travelDurationSlidingBreak
-          description: 'Discriminator value: "travelDurationSlidingBreak". Represents a break tied to driving time, such as a legal break required after a maximum amount of driving (for example, a 10-minute break every 4 hours of driving).'
-        minBreakDuration:
-          allOf:
-          - $ref: '#/components/schemas/Duration'
-          description: The minimum duration of the break.
-        maxInterBreakDuration:
-          allOf:
-          - $ref: '#/components/schemas/Duration'
-          description: The maximum duration of travel allowed between two breaks.
-      required:
-      - type
-      - minBreakDuration
-      - maxInterBreakDuration
-    RegexPrefixedIdValidation:
+    TimeZone:
       type: string
-      description: An id beginning with a prefix and an underscore.
-      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
+      description: "The time zone is a string code which identifies a region of the world in the \"time zone database\", also called \"tz database\".\nThe tz database is a partition of the world into regions where local clocks all show the same time.\nThis database gives the rules for time offset and daylight saving time in each region.\n\nHow do we use it?\n\nIn order to work with time events accurately, we usually use datetimes in the iso-8601 format, without explicit time zone.\nThis format is quite well suported by many programming languages, and it is well suited for technical data exchange.\nBut it is not easy to use for humans.\n\nFor instance, here are three datetimes in iso-8601 format, which give the same exact moment in time:\n- \"2025-05-22T05:43:00Z\"\n- \"2025-05-22T06:43:00+01:00\"\n- \"2025-05-22T07:43:00+02:00\"\n\nFor a non-technical user, it is difficult to know how to relate this to the time displayed on a watch or a clock.\n\nWe improve the user experience by adding the support of local datetimes, thanks to the use of the time zone,\nwhich allows to transform a local datetime into an iso-8601 datetime:\n- local datetime + timezone (tz) = iso-8601 datetime\n\nFor instance, here are five datetimes which all give the same exact moment in time:\n- \"2025-05-22T05:43:00Z\"\n- \"2025-05-22T06:43:00+01:00\"\n- \"2025-05-22T07:43:00+02:00\"\n- \"2025-05-22 07:43:00\"       + timezone \"tz\": \"Europe/Paris\"\n- \"2025-05-22 07:43\"          + timezone \"tz\": \"Europe/Paris\"\n\nNote: the last example (\"2025-05-22 07:43\") illustrates the support of local datetimes without seconds,\nwhich can be very practical for users.\n\nIn order for local datetimes to be supported, some JSON input objects contain a \"tz\" time zone property.\nThis \"tz\" property is used to pre-process the JSON input payload, like this:\n- We check if a valid timezone can be extracted from the \"tz\" property,\n- If so, we perform the following actions:\n  - Walk through the whole JSON content to look for local datetimes,\n  - Use the timezone to transform each local datetime into an iso-8601 datetime.\n\nImportant: some objects contain a \"properties\" sub-object, which is a map of custom client data;\nthe content of the \"properties\" sub-objects is always excluded from the time zone pre-processing.\n"
+      externalDocs:
+        url: https://www.iana.org/time-zones
+      example: Europe/Paris
     AgencyId:
       description: The agency id.
       readOnly: true
       example: LND_Agency-42
       allOf:
       - $ref: '#/components/schemas/RegexPrefixedIdValidation'
-    PlanVersion:
-      type: integer
-      description: The plan version.
-      readOnly: true
-      minimum: 1
-      example: 42
-    PlanState:
+    StopKind:
       type: string
-      readOnly: true
-      description: "The corresponding plan's state.\n  - waiting: The plan was received and is awaiting processing.\n  - processing: The plan is being processed.\n  - preOptimizing: The plan is being optimized while awaiting traffic or other information.\n  - preOptimized: While still awaiting traffic or other information, one of the following events has occurred:\n      no better solution can be produced, or the optimization period has reached its limit.\n      Note that 'preOptimized' should be followed by 'optimizing' and 'optimized'.\n  - optimizing: The plan is being optimized with all required information.\n  - optimized: This state can be triggered by one of the following events:\n      no better solution can be produced, or the optimization period has reached its limit.\n  - stopped: The plan's awaiting optimizations were canceled.\n  - deleted: The plan was deleted and awaiting optimizations were canceled.\n  - interrupted: The plan was either updated, stopped or deleted during its optimization.\n"
       enum:
-      - waiting
-      - processing
-      - preOptimizing
-      - preOptimized
-      - optimizing
-      - optimized
-      - stopped
-      - deleted
-      - interrupted
+      - pickup
+      - delivery
+      - acknowledgement
+      default: delivery
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
     TimeWindow:
       type: object
       properties:
@@ -109,6 +78,13 @@ components:
       - begin
       - end
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    UUID:
+      type: string
+      format: uuid
+      description: Universally Unique Identifier.
+      pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+      example: cd4ce4e3-0208-4b10-b346-25f235214e4f
+      readOnly: true
     SimpleResource:
       type: object
       properties:
@@ -149,6 +125,12 @@ components:
         weight: 2200
         nbPackages: 23
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PlanVersion:
+      type: integer
+      description: The plan version.
+      readOnly: true
+      minimum: 1
+      example: 42
     EnvelopedSimplePlan:
       type: object
       properties:
@@ -160,57 +142,6 @@ components:
           $ref: '#/components/schemas/PlanId'
         planVersion:
           $ref: '#/components/schemas/PlanVersion'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    EnvelopedErrors:
-      type: object
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/Error'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    ErrorProperties:
-      type: object
-      additionalProperties:
-        type: string
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    Position:
-      type: object
-      properties:
-        lon:
-          type: number
-          minimum: -180
-          maximum: 180
-          description: Longitude coordinate.
-        lat:
-          type: number
-          minimum: -90
-          maximum: 90
-          description: Latitude coordinate.
-      required:
-      - lon
-      - lat
-      example:
-        lon: 2.3269331
-        lat: 48.8812658
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    DateTime:
-      type: string
-      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
-      example: '2019-11-15T12:34:56Z'
-    Break:
-      oneOf:
-      - $ref: '#/components/schemas/TimeWindowBreak'
-      - $ref: '#/components/schemas/TravelDurationSlidingBreak'
-      - $ref: '#/components/schemas/WorkingDurationSlidingBreak'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    StopKind:
-      type: string
-      enum:
-      - pickup
-      - delivery
-      - acknowledgement
-      default: delivery
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
     Error:
       type: object
@@ -228,51 +159,20 @@ components:
       - message
       - code
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    SimpleObjective:
+    PlanState:
       type: string
-      enum:
-      - minimizeResources
-      - minimizeWorkingDuration
-      - minimizeDistance
-      default: minimizeResources
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    TimeWindowBreak:
-      type: object
-      description: A required break of a given duration in a given time window.
-      properties:
-        type:
-          type: string
-          enum:
-          - timeWindowBreak
-          description: 'Discriminator value: "timeWindowBreak". A standard break (e.g. lunch) defined by a fixed time frame.'
-        duration:
-          allOf:
-          - $ref: '#/components/schemas/Duration'
-          description: The duration (ISO 8601) of the break.
-        timeWindow:
-          allOf:
-          - $ref: '#/components/schemas/TimeWindow'
-          description: The time frame within which the break must be taken. Acts similarly to a workingTimeWindow combined with a maxWorkingDuration.
-      required:
-      - duration
-      - timeWindow
-    RegexIdValidation:
-      type: string
-      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
-      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
-    UUID:
-      type: string
-      format: uuid
-      description: Universally Unique Identifier.
-      pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
-      example: cd4ce4e3-0208-4b10-b346-25f235214e4f
       readOnly: true
-    TimeZone:
-      type: string
-      description: "The time zone is a string code which identifies a region of the world in the \"time zone database\", also called \"tz database\".\nThe tz database is a partition of the world into regions where local clocks all show the same time.\nThis database gives the rules for time offset and daylight saving time in each region.\n\nHow do we use it?\n\nIn order to work with time events accurately, we usually use datetimes in the iso-8601 format, without explicit time zone.\nThis format is quite well suported by many programming languages, and it is well suited for technical data exchange.\nBut it is not easy to use for humans.\n\nFor instance, here are three datetimes in iso-8601 format, which give the same exact moment in time:\n- \"2025-05-22T05:43:00Z\"\n- \"2025-05-22T06:43:00+01:00\"\n- \"2025-05-22T07:43:00+02:00\"\n\nFor a non-technical user, it is difficult to know how to relate this to the time displayed on a watch or a clock.\n\nWe improve the user experience by adding the support of local datetimes, thanks to the use of the time zone,\nwhich allows to transform a local datetime into an iso-8601 datetime:\n- local datetime + timezone (tz) = iso-8601 datetime\n\nFor instance, here are five datetimes which all give the same exact moment in time:\n- \"2025-05-22T05:43:00Z\"\n- \"2025-05-22T06:43:00+01:00\"\n- \"2025-05-22T07:43:00+02:00\"\n- \"2025-05-22 07:43:00\"       + timezone \"tz\": \"Europe/Paris\"\n- \"2025-05-22 07:43\"          + timezone \"tz\": \"Europe/Paris\"\n\nNote: the last example (\"2025-05-22 07:43\") illustrates the support of local datetimes without seconds,\nwhich can be very practical for users.\n\nIn order for local datetimes to be supported, some JSON input objects contain a \"tz\" time zone property.\nThis \"tz\" property is used to pre-process the JSON input payload, like this:\n- We check if a valid timezone can be extracted from the \"tz\" property,\n- If so, we perform the following actions:\n  - Walk through the whole JSON content to look for local datetimes,\n  - Use the timezone to transform each local datetime into an iso-8601 datetime.\n\nImportant: some objects contain a \"properties\" sub-object, which is a map of custom client data;\nthe content of the \"properties\" sub-objects is always excluded from the time zone pre-processing.\n"
-      externalDocs:
-        url: https://www.iana.org/time-zones
-      example: Europe/Paris
+      description: "The corresponding plan's state.\n  - waiting: The plan was received and is awaiting processing.\n  - processing: The plan is being processed.\n  - preOptimizing: The plan is being optimized while awaiting traffic or other information.\n  - preOptimized: While still awaiting traffic or other information, one of the following events has occurred:\n      no better solution can be produced, or the optimization period has reached its limit.\n      Note that 'preOptimized' should be followed by 'optimizing' and 'optimized'.\n  - optimizing: The plan is being optimized with all required information.\n  - optimized: This state can be triggered by one of the following events:\n      no better solution can be produced, or the optimization period has reached its limit.\n  - stopped: The plan's awaiting optimizations were canceled.\n  - deleted: The plan was deleted and awaiting optimizations were canceled.\n  - interrupted: The plan was either updated, stopped or deleted during its optimization.\n"
+      enum:
+      - waiting
+      - processing
+      - preOptimizing
+      - preOptimized
+      - optimizing
+      - optimized
+      - stopped
+      - deleted
+      - interrupted
     SimpleStop:
       type: object
       properties:
@@ -296,43 +196,39 @@ components:
       - id
       - position
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    Duration:
-      type: string
-      description: A period of time, expressed in the ISO8601 **duration** format.
-      pattern: ^P(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$
-      example: PT4M
-    PlanId:
-      description: The plan id.
-      readOnly: true
-      example: plan-AB
-      allOf:
-      - $ref: '#/components/schemas/RegexIdValidation'
-    WorkingDurationSlidingBreak:
-      type: object
-      description: Limitation rule on max working duration without any break.
-      properties:
-        type:
-          type: string
-          enum:
-          - workingDurationSlidingBreak
-          description: 'Discriminator value: "workDurationSlidingBreak". Represents a break tied to working time, such as a legal break required after a maximum amount of work (for example, a 10-minute break every 6 hours of work).'
-        minBreakDuration:
-          allOf:
-          - $ref: '#/components/schemas/Duration'
-          description: The minimum duration of the break.
-        maxInterBreakDuration:
-          allOf:
-          - $ref: '#/components/schemas/Duration'
-          description: The maximum duration of work allowed between two breaks.
-      required:
-      - type
-      - minBreakDuration
-      - maxInterBreakDuration
     AtFirstPositionArrival:
       type: string
       description: The resource must go back to it's Tour first position.
       enum:
       - atFirstPosition
+    TimeWindowBreak:
+      type: object
+      description: A required break of a given duration in a given time window.
+      properties:
+        type:
+          type: string
+          enum:
+          - timeWindowBreak
+          description: 'Discriminator value: "timeWindowBreak". A standard break (e.g. lunch) defined by a fixed time frame.'
+        duration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The duration (ISO 8601) of the break.
+        timeWindow:
+          allOf:
+          - $ref: '#/components/schemas/TimeWindow'
+          description: The time frame within which the break must be taken. Acts similarly to a workingTimeWindow combined with a maxWorkingDuration.
+      required:
+      - duration
+      - timeWindow
+    SimpleObjective:
+      type: string
+      enum:
+      - minimizeResources
+      - minimizeWorkingDuration
+      - minimizeDistance
+      default: minimizeResources
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
     SimplePlan:
       type: object
       description: A simple plan is a simplified representation of a plan, with simplified resources, simplified stops, and a simplified objective.
@@ -403,15 +299,113 @@ components:
       - id
       - agencyId
       - resources
+    WorkingDurationSlidingBreak:
+      type: object
+      description: Limitation rule on max working duration without any break.
+      properties:
+        type:
+          type: string
+          enum:
+          - workingDurationSlidingBreak
+          description: 'Discriminator value: "workDurationSlidingBreak". Represents a break tied to working time, such as a legal break required after a maximum amount of work (for example, a 10-minute break every 6 hours of work).'
+        minBreakDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The minimum duration of the break.
+        maxInterBreakDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The maximum duration of work allowed between two breaks.
+      required:
+      - type
+      - minBreakDuration
+      - maxInterBreakDuration
+    Position:
+      type: object
+      properties:
+        lon:
+          type: number
+          minimum: -180
+          maximum: 180
+          description: Longitude coordinate.
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+          description: Latitude coordinate.
+      required:
+      - lon
+      - lat
+      example:
+        lon: 2.3269331
+        lat: 48.8812658
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    TravelDurationSlidingBreak:
+      type: object
+      description: Limitation rule on max travel duration without any break.
+      properties:
+        type:
+          type: string
+          enum:
+          - travelDurationSlidingBreak
+          description: 'Discriminator value: "travelDurationSlidingBreak". Represents a break tied to driving time, such as a legal break required after a maximum amount of driving (for example, a 10-minute break every 4 hours of driving).'
+        minBreakDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The minimum duration of the break.
+        maxInterBreakDuration:
+          allOf:
+          - $ref: '#/components/schemas/Duration'
+          description: The maximum duration of travel allowed between two breaks.
+      required:
+      - type
+      - minBreakDuration
+      - maxInterBreakDuration
+    Break:
+      oneOf:
+      - $ref: '#/components/schemas/TimeWindowBreak'
+      - $ref: '#/components/schemas/TravelDurationSlidingBreak'
+      - $ref: '#/components/schemas/WorkingDurationSlidingBreak'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    DateTime:
+      type: string
+      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
+      example: '2019-11-15T12:34:56Z'
+    RegexIdValidation:
+      type: string
+      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
+      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
+    ErrorProperties:
+      type: object
+      additionalProperties:
+        type: string
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EnvelopedErrors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    Duration:
+      type: string
+      description: A period of time, expressed in the ISO8601 **duration** format.
+      pattern: ^P(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$
+      example: PT4M
+    PlanId:
+      description: The plan id.
+      readOnly: true
+      example: plan-AB
+      allOf:
+      - $ref: '#/components/schemas/RegexIdValidation'
+    RegexPrefixedIdValidation:
+      type: string
+      description: An id beginning with a prefix and an underscore.
+      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
   responses:
     InternalServerError:
       description: An internal server error has occurred.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnvelopedErrors'
-    Unauthorized:
-      description: The caller is not authorized to perform this action.
       content:
         application/json:
           schema:
@@ -430,6 +424,12 @@ components:
             $ref: '#/components/schemas/EnvelopedErrors'
     NotAuthenticated:
       description: The caller is not authenticated.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    Unauthorized:
+      description: The caller is not authorized to perform this action.
       content:
         application/json:
           schema:
