@@ -45,6 +45,9 @@ image: https://kardinal.ai/wp-content/uploads/2020/01/cropped-Icon-blue-270x270.
 url: https://raw.githubusercontent.com/api-evangelist/kardinal/refs/heads/main/apis.yml
 x-type: company
 x-source: serena-portfolio
+x-docs-platform: mintlify
+x-docs-platform-confidence: medium
+x-docs-platform-checked: 2026-10-03
 x-enrichment:
   date: '2026-08-17'
   status: enriched
