@@ -58,3 +58,23 @@ evidence:
 - {url: 'https://kardinal.ai/route-optimization-api/', http_status: 200, fetched: '2026-08-17'}
 - {url: 'https://kardinal.ai/pricing-route-optimization-api', http_status: 404, fetched: '2026-08-17'}
 - {url: 'https://console.kardinal.ai', http_status: null, fetched: '2026-08-17', note: DNS NXDOMAIN}
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models:
+  - free
+  - metered
+  units: []
+  plans:
+  - name: Free tier
+    access: other
+    model: free
+    model_how: derived
+    units: []
+    periods: []
+  - name: Prepaid packs
+    access: other
+    model: metered
+    model_how: derived
+    units: []
+    periods: []
