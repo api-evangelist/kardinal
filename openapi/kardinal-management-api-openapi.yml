@@ -151,61 +151,87 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 components:
+  responses:
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    InternalServerError:
+      description: An internal server error has occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    Unauthorized:
+      description: The caller is not authorized to perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    NotAuthenticated:
+      description: The caller is not authenticated.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    Forbidden:
+      description: The caller is not allowed to perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
+    BadRequest:
+      description: The server could not understand the request due to invalid content (bad syntax, bad format, bad values, etc).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvelopedErrors'
   schemas:
-    EnvelopedTimedPlanStates:
+    RegexIdValidation:
+      type: string
+      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
+      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
+    ErrorProperties:
+      type: object
+      additionalProperties:
+        type: string
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PlanStatusVersion:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimedPlanState'
-        agencyId:
-          $ref: '#/components/schemas/AgencyId'
-        planId:
-          $ref: '#/components/schemas/PlanId'
+        waitingVersion:
+          description: The version currently waiting.
+          allOf:
+          - $ref: '#/components/schemas/PlanVersion'
+        runningVersion:
+          description: The version currently running.
+          allOf:
+          - $ref: '#/components/schemas/PlanVersion'
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    AgencyId:
-      description: The agency id.
-      readOnly: true
-      example: LND_Agency-42
-      allOf:
-      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
-    AccessToken:
+    DateTime:
       type: string
-      description: A JSON Web Token with scope 'access', to be used to access protected data, valid for 1 hour.
-      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...oLXvDw
-    PlanVersion:
-      type: integer
-      description: The plan version.
-      readOnly: true
-      minimum: 1
-      example: 42
-    EnvelopedTimedPlanState:
+      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
+      example: '2019-11-15T12:34:56Z'
+    EnvelopedLoginRefreshOutput:
       type: object
+      description: An object containing the new access token.
       properties:
         item:
-          $ref: '#/components/schemas/TimedPlanState'
-        agencyId:
-          $ref: '#/components/schemas/AgencyId'
-        planId:
-          $ref: '#/components/schemas/PlanId'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    Error:
-      type: object
-      readOnly: true
-      properties:
-        code:
-          type: string
+          type: object
+          properties:
+            accessToken:
+              $ref: '#/components/schemas/AccessToken'
           description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        message:
-          type: string
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        properties:
-          $ref: '#/components/schemas/ErrorProperties'
-      required:
-      - message
-      - code
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        access_token:
+          allOf:
+          - deprecated: true
+          - $ref: '#/components/schemas/AccessToken'
+    GDPRToken:
+      type: string
+      description: A JSON Web Token with scope 'gdpr', to be used to approve a GDPR policy, valid for 1 hour.
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...cMp9DA
     PlanState:
       type: string
       readOnly: true
@@ -220,35 +246,6 @@ components:
       - stopped
       - deleted
       - interrupted
-    GDPRToken:
-      type: string
-      description: A JSON Web Token with scope 'gdpr', to be used to approve a GDPR policy, valid for 1 hour.
-      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...cMp9DA
-    PlanStatus:
-      type: object
-      readOnly: true
-      properties:
-        planVersionInSolution:
-          description: The plan version taken into account in the current solution.
-          allOf:
-          - $ref: '#/components/schemas/PlanVersion'
-        waitingRoom:
-          description: If the maximum number of simultaneous running plans has already been reached, the plan waits in the waiting room for one of the running plans to finish.
-          allOf:
-          - $ref: '#/components/schemas/PlanStatusVersion'
-        waitingTraffic:
-          description: The plan is waiting for its traffic coefficients to be computed.
-          allOf:
-          - $ref: '#/components/schemas/PlanStatusVersion'
-        creation:
-          description: The plan is being created in order to be optimized.
-          allOf:
-          - $ref: '#/components/schemas/PlanStatusVersion'
-        optimization:
-          description: The plan is being optimized.
-          allOf:
-          - $ref: '#/components/schemas/PlanStatusVersion'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
     EnvelopedLoginGDPROutput:
       type: object
       description: An object containing a 'gdpr' JSON Web Token, returned by a successful login of a user which needs to approve a GDPR policy.
@@ -276,6 +273,50 @@ components:
         state:
           $ref: '#/components/schemas/PlanState'
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    EnvelopedTimedPlanState:
+      type: object
+      properties:
+        item:
+          $ref: '#/components/schemas/TimedPlanState'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    PlanVersion:
+      type: integer
+      description: The plan version.
+      readOnly: true
+      minimum: 1
+      example: 42
+    Error:
+      type: object
+      readOnly: true
+      properties:
+        code:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        message:
+          type: string
+          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+        properties:
+          $ref: '#/components/schemas/ErrorProperties'
+      required:
+      - message
+      - code
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
+    RegexPrefixedIdValidation:
+      type: string
+      description: An id beginning with a prefix and an underscore.
+      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
+    EnvelopedErrors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
     EnvelopedPlanStatus:
       type: object
       properties:
@@ -288,52 +329,34 @@ components:
         planVersion:
           $ref: '#/components/schemas/PlanVersion'
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    EnvelopedLoginRefreshOutput:
-      type: object
-      description: An object containing the new access token.
-      properties:
-        item:
-          type: object
-          properties:
-            accessToken:
-              $ref: '#/components/schemas/AccessToken'
-          description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-        access_token:
-          allOf:
-          - deprecated: true
-          - $ref: '#/components/schemas/AccessToken'
-    RegexIdValidation:
+    AccessToken:
       type: string
-      description: 'At least one character among those allowed: unaccented alpha-numeric characters, "-", ".", "_", "~", ":", "@", "!", "$", ",".'
-      pattern: ^[a-zA-Z0-9-._~:@!$,]+$
-    DateTime:
-      type: string
-      description: 'A full calendar date time, expressed in the ISO8601 **date** format: YYYY-MM-DDThh:mm:ssZ.'
-      example: '2019-11-15T12:34:56Z'
-    ErrorProperties:
+      description: A JSON Web Token with scope 'access', to be used to access protected data, valid for 1 hour.
+      example: eyJhbGciOiJFZERTQSJ9.eyJhdW...oLXvDw
+    PlanStatus:
       type: object
-      additionalProperties:
-        type: string
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    PlanStatusVersion:
-      type: object
+      readOnly: true
       properties:
-        waitingVersion:
-          description: The version currently waiting.
+        planVersionInSolution:
+          description: The plan version taken into account in the current solution.
           allOf:
           - $ref: '#/components/schemas/PlanVersion'
-        runningVersion:
-          description: The version currently running.
+        waitingRoom:
+          description: If the maximum number of simultaneous running plans has already been reached, the plan waits in the waiting room for one of the running plans to finish.
           allOf:
-          - $ref: '#/components/schemas/PlanVersion'
-      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
-    EnvelopedErrors:
-      type: object
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/Error'
+          - $ref: '#/components/schemas/PlanStatusVersion'
+        waitingTraffic:
+          description: The plan is waiting for its traffic coefficients to be computed.
+          allOf:
+          - $ref: '#/components/schemas/PlanStatusVersion'
+        creation:
+          description: The plan is being created in order to be optimized.
+          allOf:
+          - $ref: '#/components/schemas/PlanStatusVersion'
+        optimization:
+          description: The plan is being optimized.
+          allOf:
+          - $ref: '#/components/schemas/PlanStatusVersion'
       description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
     PlanId:
       description: The plan id.
@@ -341,55 +364,32 @@ components:
       example: plan-AB
       allOf:
       - $ref: '#/components/schemas/RegexIdValidation'
-    RegexPrefixedIdValidation:
-      type: string
-      description: An id beginning with a prefix and an underscore.
-      pattern: ^[A-Z]{3,6}_[a-zA-Z0-9-._~:@!$,]+$
-  responses:
-    InternalServerError:
-      description: An internal server error has occurred.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnvelopedErrors'
-    NotFound:
-      description: The specified resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnvelopedErrors'
-    Forbidden:
-      description: The caller is not allowed to perform this action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnvelopedErrors'
-    BadRequest:
-      description: The server could not understand the request due to invalid content (bad syntax, bad format, bad values, etc).
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnvelopedErrors'
-    NotAuthenticated:
-      description: The caller is not authenticated.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnvelopedErrors'
-    Unauthorized:
-      description: The caller is not authorized to perform this action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnvelopedErrors'
+    AgencyId:
+      description: The agency id.
+      readOnly: true
+      example: LND_Agency-42
+      allOf:
+      - $ref: '#/components/schemas/RegexPrefixedIdValidation'
+    EnvelopedTimedPlanStates:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimedPlanState'
+        agencyId:
+          $ref: '#/components/schemas/AgencyId'
+        planId:
+          $ref: '#/components/schemas/PlanId'
+      description: '[TO_VALIDATE] Description pending review by a Kardinal engineer.'
   parameters:
-    planId:
-      name: planId
-      description: The plan id.
-      in: path
-      required: true
+    force:
+      name: force
+      description: If true, on an archived item, the requested action will be forced and the item will be unarchived.
+      in: query
       schema:
-        $ref: '#/components/schemas/RegexIdValidation'
+        type: boolean
+        default: false
     limit:
       name: limit
       description: 'The number of items to fetch. The value should be a positive integer
@@ -404,13 +404,13 @@ components:
         example: 5
         default: 5
         minimum: 0
-    force:
-      name: force
-      description: If true, on an archived item, the requested action will be forced and the item will be unarchived.
-      in: query
+    planId:
+      name: planId
+      description: The plan id.
+      in: path
+      required: true
       schema:
-        type: boolean
-        default: false
+        $ref: '#/components/schemas/RegexIdValidation'
     agencyId:
       name: agencyId
       description: The agency id.
